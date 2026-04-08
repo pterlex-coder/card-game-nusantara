@@ -384,9 +384,9 @@
             background: rgba(10, 5, 40, 0.82);
             -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
             border: 2px solid rgba(255,255,255,0.18);
-            border-radius: 20px;
-            padding: 20px 22px;
-            max-width: 740px;
+            border-radius: 24px;
+            padding: 30px 32px;
+            max-width: 620px;
             width: 96%;
             text-align: center;
             margin: 0 auto;
@@ -397,28 +397,28 @@
             to   { opacity: 1; transform: translateY(0); }
         }
         .prov-preview-title {
-            font-size: 1.5em; font-weight: bold; color: #fff;
-            margin-bottom: 4px;
+            font-size: 1.9em; font-weight: bold; color: #fff;
+            margin-bottom: 6px;
         }
         .prov-preview-subtitle {
-            font-size: 0.95em; color: rgba(255,255,255,0.65);
-            margin-bottom: 16px;
+            font-size: 1.05em; color: rgba(255,255,255,0.65);
+            margin-bottom: 20px;
         }
         .prov-grid {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr 1fr;
-            gap: 6px;
-            margin-bottom: 16px;
+            gap: 10px;
+            margin-bottom: 22px;
         }
         .prov-chip {
             background: rgba(255,255,255,0.1);
             border: 1.5px solid rgba(255,255,255,0.2);
-            border-radius: 10px;
-            padding: 5px 7px;
-            font-size: 0.74em;
+            border-radius: 12px;
+            padding: 10px 10px;
+            font-size: 0.88em;
             color: #fff;
-            display: flex; align-items: center; gap: 5px;
-            text-align: left;
+            display: flex; flex-direction: column; align-items: center; gap: 6px;
+            text-align: center;
         }
         .prov-chip.mandatory {
             background: rgba(255, 200, 0, 0.18);
@@ -426,11 +426,11 @@
             color: #ffd700;
             font-weight: bold;
         }
-        .prov-chip-icon { width: 32px; height: 24px; object-fit: contain; border-radius: 4px; flex-shrink: 0; }
+        .prov-chip-icon { width: 64px; height: 44px; object-fit: contain; border-radius: 6px; flex-shrink: 0; }
         .prov-countdown {
-            font-size: 1.1em; color: rgba(255,255,255,0.8);
+            font-size: 1.2em; color: rgba(255,255,255,0.8);
         }
-        .prov-countdown span { color: #ffd700; font-weight: bold; font-size: 1.3em; }
+        .prov-countdown span { color: #ffd700; font-weight: bold; font-size: 1.4em; }
 
         /* RIGHT PANEL */
         .right-panel {
@@ -767,11 +767,11 @@
         .province-info-card-name { font-size:0.75em; font-weight:bold; text-align:center; line-height:1.1; flex-grow:1; display:flex; align-items:center; justify-content:center; overflow:hidden; text-overflow:ellipsis; word-wrap:break-word; }
         .province-info-card-type { font-size:0.6em; text-align:center; color:#666; margin-top:3px; padding-top:3px; border-top:1px solid rgba(0,0,0,0.1); }
         .province-info-card-owned {
-            position: absolute; top: -35px; left: 50%; transform: translateX(-50%);
+            position: absolute; top: 4px; left: 4px;
             background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
-            color: white; padding: 4px 10px; border-radius: 12px;
-            font-size: 0.7em; font-weight: bold; box-shadow: 0 3px 10px rgba(76,175,80,0.5);
-            z-index: 10; white-space: nowrap; border: 2px solid #2e7d32;
+            color: white; padding: 3px 7px; border-radius: 10px;
+            font-size: 0.62em; font-weight: bold; box-shadow: 0 2px 6px rgba(76,175,80,0.5);
+            z-index: 10; white-space: nowrap; border: 1.5px solid #2e7d32;
         }
 
         /* GAME OVER MODAL */
@@ -2276,8 +2276,10 @@
             .party-slot-name { font-size: 0.72em; }
 
             /* Province preview */
-            #provinces-preview { padding: 14px 12px; }
-            .prov-grid { grid-template-columns: 1fr 1fr 1fr 1fr; }
+            #provinces-preview { padding: 18px 14px; }
+            .prov-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+            .prov-chip-icon { width: 48px; height: 34px; }
+            .prov-chip { font-size: 0.8em; }
 
             /* Log */
             .log-area { max-height: 80px; }
@@ -2613,7 +2615,7 @@
                     <span class="enc-rule-icon">🎰</span>
                     <div class="enc-rule-heading">Sistem Draw Level — Makin Sering Draw, Makin Bagus Kartunya!</div>
                     <div class="enc-rule-text">
-                        Setiap pemain punya <strong>Draw Level</strong> (Level 1–10) yang naik otomatis setiap <strong>3 kali Draw Card</strong>. Semakin tinggi levelmu, semakin besar peluang mendapat kartu langka! Level 10 adalah level tertinggi — 👑 Mythic dominan!<br><br>
+                        Setiap pemain punya <strong>Draw Level</strong> (Level 1–10) yang naik otomatis setiap <strong>1 kali Draw Card</strong>. Semakin tinggi levelmu, semakin besar peluang mendapat kartu langka! Level 10 adalah level tertinggi — 👑 Mythic dominan!<br><br>
                         <strong>🎴 Prioritas Kartu per Level (Lv1–Lv5):</strong>
                     </div>
                     <div style="overflow-x:auto; margin-top:8px;">
@@ -3157,7 +3159,7 @@
                                 <span style="font-weight:bold; font-size:0.9em;">🕹️ Tahap: <strong id="phase-name">1</strong></span>
                             </div>
                             <div id="player-turn-notification" style="display:none; margin-left:15px; padding:8px 15px; background:#4caf50; border:2px solid #2e7d32; border-radius:8px;">
-                                <span style="font-weight:bold; font-size:0.9em;">✅ Pilih kartu di bawah</span>
+                                <span id="player-turn-notification-text" style="font-weight:bold; font-size:0.9em;">✅ Pilih kartu di bawah</span>
                             </div>
                             <div id="player-penalty" style="display:none; margin-left:15px; padding:8px 15px; background:rgba(244,67,54,0.9); border:2px solid #f44336; border-radius:8px;">
                                 <span style="font-weight:bold; font-size:0.9em;" id="penalty-text">⚠️ Anda harus draw card</span>
@@ -4449,6 +4451,15 @@
                     showPreloadingScreen(false);
                     showHomeButtons();
                     document.getElementById('profile-badge').style.display = 'block';
+                } else if (data.type === 'GAME_OVER') {
+                    // Game sudah selesai saat reconnect — sembunyikan pre-loading screen dulu baru tampilkan hasil
+                    reconnected.value = true;
+                    reconnectAttempts = MAX_RECONNECT_ATTEMPTS;
+                    const _ps = document.getElementById('pre-loading-screen');
+                    _ps.classList.add('hidden');
+                    setTimeout(() => { _ps.style.display = 'none'; }, 500);
+                    ws.onmessage = (ev) => { try { handleServerMessage(JSON.parse(ev.data)); } catch(e) {} };
+                    if (data.players) endGame(data.players);
                 } else {
                     // Pesan lain (misal LOG) tiba sebelum GAME_STATE_UPDATE.
                     // Jangan set currentRoomId dulu — tunggu konfirmasi GAME_STATE_UPDATE
@@ -5721,9 +5732,70 @@
             }
         }
 
+        let _prevPhase = null;
+        let _prevRound = null;
+        let _prevHasPlayed = {};
+        let _prevMustForcePick = {};
+        let _prevMustDraw = {};
+        let _prevHands = {};
+        let _prevFreed = {};
         function updateGameUI(newState) {
+            const prevPhase = _prevPhase;
             gameState = newState;
-            playCardInProgress = false; // state sudah diperbarui, boleh kirim aksi lagi
+            _prevPhase = newState.phase;
+            _prevRound = newState.round;
+
+            if (newState.players) {
+                // Deteksi pemain yang baru saja menjatuhkan kartu (hasPlayed baru jadi true)
+                // Skip jika sebelumnya mustForcePick (berarti Mengambil kartu, bukan menjatuhkan)
+                newState.players.forEach(p => {
+                    if (p.hasPlayed && !_prevHasPlayed[p.id] && !_prevMustForcePick[p.id] && !_prevMustDraw[p.id]) {
+                        const prevHand = _prevHands[p.id] || [];
+                        const newHandIds = new Set((p.hand || []).map(c => c.id));
+                        const played = prevHand.find(c => !newHandIds.has(c.id));
+                        const cardName = played ? played.name : '';
+                        showNotification(`🎴 ${_shortName(p.name)} menjatuhkan kartu${cardName ? ' ' + cardName : ''}`);
+                    }
+                });
+                // Simpan state sekarang
+                // Deteksi pemain yang baru dibebaskan dari force card
+                const freedPlayers = newState.players.filter(p => p.freed && !_prevFreed[p.id] && !p.winner).map(p => _shortName(p.name));
+                if (freedPlayers.length > 0) {
+                    showNotification(`✅ ${freedPlayers.join(' dan ')} dibebaskan dari force card`);
+                }
+
+                _prevHasPlayed = {};
+                _prevMustForcePick = {};
+                _prevMustDraw = {};
+                _prevHands = {};
+                _prevFreed = {};
+                newState.players.forEach(p => {
+                    _prevHasPlayed[p.id] = p.hasPlayed;
+                    _prevMustForcePick[p.id] = p.mustForcePick;
+                    _prevMustDraw[p.id] = p.mustDraw;
+                    _prevHands[p.id] = p.hand ? [...p.hand] : [];
+                    _prevFreed[p.id] = p.freed;
+                });
+
+                // Saat baru masuk phase 2, tampilkan siapa yang terkena draw card
+                if (prevPhase === 1 && newState.phase === 2) {
+                    const drawPlayers = newState.players.filter(p => p.mustDraw && !p.winner).map(p => _shortName(p.name));
+                    if (drawPlayers.length > 0) {
+                        showNotification(`🎴 ${drawPlayers.join(' dan ')} terkena draw card`);
+                    }
+                }
+
+                // Reset saat ronde baru
+                if (_prevRound !== newState.round) {
+                    _prevHasPlayed = {};
+                    _prevMustForcePick = {};
+                    _prevMustDraw = {};
+                    _prevHands = {};
+                    _prevFreed = {};
+                }
+            }
+
+            playCardInProgress = false;
             updateUI();
         }
 
@@ -5949,8 +6021,10 @@
             logContainer.appendChild(logEntry);
             logContainer.scrollTop = logContainer.scrollHeight;
 
-            const isImportant = message.includes('MENANG') || message.includes('dibebaskan') ||
-                message.includes('Force Pick') || message.includes('harus ambil');
+
+            const isImportant = message.includes('MENANG') ||
+                message.includes('mendapat giliran Tahap 1') ||
+                (message.includes('Mengambil kartu') && !message.includes('AUTO'));
             if (isImportant) showNotification(message);
         }
 
@@ -5998,22 +6072,66 @@
             }
         }
 
-        function showNotification(message) {
+        const _notifQueue = [];
+        let _notifBusy = false;
+        let _notifCurrent = null;
+        let _notifDismissTimer = null;
+        function _dismissCurrent(then) {
+            if (!_notifCurrent) { then && then(); return; }
+            clearTimeout(_notifDismissTimer);
+            _notifCurrent.style.animation = 'slideOutRight 0.3s ease-out';
+            setTimeout(() => {
+                if (_notifCurrent) { _notifCurrent.remove(); _notifCurrent = null; }
+                _notifBusy = false;
+                then && then();
+            }, 300);
+        }
+        function _processNotifQueue() {
+            if (_notifBusy || _notifQueue.length === 0) return;
+            _notifBusy = true;
+            const message = _notifQueue.shift();
             const n = document.createElement('div');
             n.className = 'game-notification';
             n.textContent = message;
+            const bg = message.includes('DIBEBASKAN') || message.includes('MENANG') || message.includes('Tahap 1')
+                ? 'linear-gradient(135deg,#4caf50 0%,#2e7d32 100%)'
+                : message.includes('Mengambil')
+                ? 'linear-gradient(135deg,#f57c00 0%,#e65100 100%)'
+                : 'linear-gradient(135deg,#667eea 0%,#764ba2 100%)';
             n.style.cssText = `
-                position:fixed; top:20px; right:20px;
-                background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
-                color:white; padding:15px 25px; border-radius:10px;
+                position:fixed; right:20px; top:20px;
+                background:${bg};
+                color:white; padding:12px 20px; border-radius:10px;
                 box-shadow:0 4px 15px rgba(0,0,0,0.3); z-index:10000;
-                font-weight:bold; animation:slideInRight 0.3s ease-out; max-width:300px;
+                font-weight:bold; animation:slideInRight 0.3s ease-out;
+                max-width:300px; font-size:0.9em;
             `;
             document.body.appendChild(n);
-            setTimeout(() => {
-                n.style.animation = 'slideOutRight 0.3s ease-out';
-                setTimeout(() => n.remove(), 300);
-            }, 3000);
+            _notifCurrent = n;
+
+            // Setelah 1 detik: jika ada antrian, langsung ganti; jika tidak, tunggu hingga 2 detik
+            _notifDismissTimer = setTimeout(() => {
+                if (_notifQueue.length > 0) {
+                    _dismissCurrent(_processNotifQueue);
+                } else {
+                    // Tidak ada antrian — tunggu maksimal 1 detik lagi (total 2 detik)
+                    _notifDismissTimer = setTimeout(() => {
+                        _dismissCurrent(_processNotifQueue);
+                    }, 1000);
+                }
+            }, 1000);
+        }
+        function _shortName(name) {
+            return name.length > 12 ? name.slice(0, 12) + '...' : name;
+        }
+        function showNotification(message) {
+            _notifQueue.push(message);
+            if (_notifBusy && _notifCurrent) {
+                // Ada notifikasi yang sedang "menunggu" — langsung ganti
+                _dismissCurrent(_processNotifQueue);
+            } else {
+                _processNotifQueue();
+            }
         }
 
         // =============================================
@@ -6693,11 +6811,14 @@
             // Turn notification
             const notification = document.getElementById('player-turn-notification');
             const hasMatchingCard = player.hand.some(c => c.province === gameState.currentProvince);
+            const notifText = document.getElementById('player-turn-notification-text');
             if (gameState.forcePickProcessing || player.mustForcePick) {
                 notification.style.display = 'none';
             } else if (gameState.phase === 1 && gameState.phase1Player === player.id && !player.hasPlayed) {
+                notifText.textContent = '✅ Pilih Bebas kartu di bawah';
                 notification.style.display = 'block';
             } else if (gameState.phase === 2 && !player.hasPlayed && !player.mustDraw && !player.mustForcePick && hasMatchingCard) {
+                notifText.textContent = '✅ Pilih kartu di bawah';
                 notification.style.display = 'block';
             } else {
                 notification.style.display = 'none';
@@ -7199,7 +7320,7 @@
         // PROVINCE TOOLTIP FEATURE
         // =============================================
         let _showProvinceTooltip    = lsGet(LS.PROVINCE_TOOLTIP)    === '1'; // default: off
-        let _showDeckProvinceLabel  = lsGet(LS.DECK_PROVINCE_LABEL) !== '0'; // default: on
+        let _showDeckProvinceLabel  = lsGet(LS.DECK_PROVINCE_LABEL) === '1'; // default: off
 
         function applyDeckProvinceLabelSetting(enabled) {
             _showDeckProvinceLabel = enabled;
@@ -7949,7 +8070,7 @@
             { key:'commonplus',  label:'🟢 Common+' },
             { key:'common',      label:'⚪ Common' },
         ];
-        const DL_THRESHOLDS = [0, 0, 3, 6, 9, 12, 15, 18, 21, 24, 27]; // index=level, value=min drawCount (naik setiap 3 draw)
+        const DL_THRESHOLDS = [0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9]; // index=level, value=min drawCount (naik setiap 1 draw)
         const DL_STARS = { 1:'⭐', 2:'⭐', 3:'⭐', 4:'⭐', 5:'⭐', 6:'⭐', 7:'⭐', 8:'⭐', 9:'⭐', 10:'⭐' };
 
         function showDrawLevelInfo(playerId) {
