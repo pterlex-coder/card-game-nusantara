@@ -8920,16 +8920,39 @@
             const partySize = 1 + friendCount;
             _partyQueueSize = partySize > 1 ? partySize : null;
 
+            // ── FIX: Generate sharedQueueId BARU setiap kali Mulai ditekan ──────
+            // Setiap siklus matchmaking harus memakai ID unik agar server tidak
+            // bingung antara partyGroup lama (yang mungkin masih dalam grace period
+            // cancel) dengan siklus baru. _partyFirebaseId tetap disimpan sebagai
+            // anchor agar tamu bisa mengidentifikasi sinyal dari host yang benar.
+            //
+            // Alur:
+            //   _partyFirebaseId = "party_abc" (ID Firebase asli, tidak berubah)
+            //   Siklus 1: _partyId = "qp_111_aaa"  → dikirim ke server + tamu
+            //   Siklus 2: _partyId = "qp_222_bbb"  → dikirim ke server + tamu
+            //   Siklus 3: dst.
+            //
+            // Tamu: _startPartySignalListener menerima partyId dari sig.partyId
+            // (qp_xxx baru), bukan dari _partyFirebaseId — sehingga selalu sinkron.
+            const sharedQueueId = friendCount > 0
+                ? `qp_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`
+                : null;
+
+            if (sharedQueueId) {
+                _partyId = sharedQueueId; // gunakan ID baru untuk JOIN_MATCHMAKING
+            }
+
             // Beritahu teman yang sudah join untuk segera masuk antrian via Firebase partySignal
             const acceptedUids = [
                 slot2Joined ? _partyFriendUid : null,
                 slot3Joined ? _partyFriend2Uid : null
             ].filter(Boolean);
+
             // FIX race condition: simpan sinyal dulu, baru kirim di ws.onopen setelah host connect.
-            // Ini mencegah tamu menerima partySignal sebelum sempat pasang ulang listener
-            // (yang terjadi jika host langsung mulai ulang setelah cancel).
+            // Kirim sharedQueueId baru (bukan _partyFirebaseId) agar tamu JOIN_MATCHMAKING
+            // dengan partyId yang sama persis dengan host.
             _pendingPartySignals = acceptedUids.length > 0
-                ? { uids: acceptedUids, partyId: _partyId, partySize }
+                ? { uids: acceptedUids, partyId: sharedQueueId, partySize }
                 : null;
 
             // Pasang listener partyCancelSearch untuk HOST — agar host ikut berhenti
@@ -9072,7 +9095,16 @@
             _partySignalRef.on('value', snap => {
                 if (!snap.exists()) return;
                 const sig = snap.val();
-                if (!sig || sig.partyId !== partyId) return;
+                // ── FIX: Validasi sinyal berdasarkan struktur data, bukan exact match partyId ──
+                // Sebelumnya: sig.partyId !== partyId → GAGAL karena host kini generate
+                // sharedQueueId (qp_xxx) baru tiap siklus, sedangkan listener dipanggil
+                // dengan _partyFirebaseId (party_xxx) yang tidak pernah cocok.
+                //
+                // Sekarang: terima sinyal APAPUN yang punya partyId & partySize valid,
+                // selama listener ini masih aktif (artinya tamu memang menunggu sinyal).
+                // Guard pengaman: sinyal harus punya partyId bertipe string dan partySize > 0.
+                if (!sig || typeof sig.partyId !== 'string' || !(sig.partySize > 0)) return;
+
                 // Host sudah mulai — hapus sinyal lalu masuk antrian
                 db.ref(`users/${currentUser.uid}/partySignal`).remove().catch(() => {});
                 if (_partySignalRef) { _partySignalRef.off(); _partySignalRef = null; }
@@ -9087,8 +9119,9 @@
                     if (_partyKickRef) { _partyKickRef.off(); _partyKickRef = null; }
                     if (_partyGuestRosterRef) { _partyGuestRosterRef.off(); _partyGuestRosterRef = null; }
                 }
-                _partyFirebaseId = sig.partyId; // Pertahankan Firebase ID asli sebelum diganti sharedPartyId
-                _partyId = sig.partyId;
+                // Gunakan sharedQueueId (qp_xxx) dari sinyal sebagai _partyId untuk JOIN_MATCHMAKING
+                // _partyFirebaseId tetap tidak berubah (party_xxx) — dipakai untuk signal listener berikutnya
+                _partyId = sig.partyId;          // qp_xxx baru dari host
                 _partyQueueSize = sig.partySize || 2;
                 startMatchmaking();
             });
