@@ -2332,6 +2332,35 @@
             box-shadow: 0 6px 24px rgba(0,0,0,0.5);
             max-width: 230px; animation: bubbleIn 0.25s ease;
         }
+        /* FLOATING MATCHMAKING BAR */
+        #matchmaking-float-bar {
+            position: fixed; top: 12px; left: 50%; transform: translateX(-50%);
+            background: linear-gradient(135deg, rgba(20,10,60,0.97), rgba(60,20,120,0.97));
+            border: 1.5px solid rgba(255,255,255,0.25);
+            border-radius: 50px; padding: 8px 14px 8px 14px;
+            align-items: center; gap: 10px;
+            z-index: 99999;
+            box-shadow: 0 6px 24px rgba(0,0,0,0.5);
+            animation: floatBarIn 0.3s ease;
+            white-space: nowrap;
+        }
+        @keyframes floatBarIn {
+            from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+            to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+        .mf-icon { font-size: 1.1em; }
+        .mf-info { display: flex; flex-direction: column; gap: 1px; }
+        .mf-label { font-size: 0.82em; font-weight: 700; color: #fff; }
+        .mf-timer { font-size: 0.75em; color: rgba(255,255,255,0.7); font-variant-numeric: tabular-nums; }
+        .mf-cancel-btn {
+            background: rgba(255,80,80,0.25); border: 1px solid rgba(255,80,80,0.5);
+            color: #fff; border-radius: 50%; width: 26px; height: 26px;
+            cursor: pointer; font-size: 0.8em; display: flex; align-items: center;
+            justify-content: center; transition: background 0.2s;
+            flex-shrink: 0;
+        }
+        .mf-cancel-btn:hover { background: rgba(255,80,80,0.5); }
+
         @keyframes bubbleIn {
             from { opacity: 0; transform: translateY(16px) scale(0.92); }
             to   { opacity: 1; transform: translateY(0) scale(1); }
@@ -5311,16 +5340,38 @@
         // =============================================
         // MATCHMAKING
         // =============================================
+        // Tutup semua halaman/overlay yang mungkin sedang terbuka
+        function closeAllScreens() {
+            const ids = [
+                'profile-screen',
+                'settings-screen',
+                'leaderboard-screen',
+                'view-profile-modal',
+                'ingame-settings-panel',
+                'party-lobby-overlay',
+                'party-invite-popup',
+                'kostum-picker-overlay',
+                'custom-room-overlay',
+                'custom-room-invite-popup',
+                'avatar-picker-overlay',
+            ];
+            ids.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.display = 'none';
+            });
+            // Sembunyikan bubble lobby juga
+            const partyBubble = document.getElementById('party-lobby-bubble');
+            const customBubble = document.getElementById('custom-lobby-bubble');
+            if (partyBubble) partyBubble.style.display = 'none';
+            if (customBubble) customBubble.style.display = 'none';
+        }
+
         function startMatchmaking() {
             _setPresenceStatus('inQueue');
-            soundEffects.bgMusic.pause();
-            try {
-                soundEffects.bgMusic2.currentTime = 0;
-                soundEffects.bgMusic2.play().catch(() => {});
-            } catch(e) {}
-            DOM.matchmakingScreen.querySelector('#matchmaking-idle').style.display = 'none';
-            DOM.matchmakingScreen.querySelector('#matchmaking-waiting').style.display = 'flex';
-            DOM.matchmakingScreen.style.justifyContent = 'center';
+            // bgMusic tetap jalan saat mencari lawan, bgMusic2 akan diputar saat memasuki pertandingan
+            // Sembunyikan matchmaking screen, tampilkan floating bar
+            DOM.matchmakingScreen.classList.remove('active');
+            showMatchmakingFloatBar();
             startMatchmakingCountdown();
 
             ws = new WebSocket(SERVER_URL);
@@ -5367,6 +5418,7 @@
         function cancelMatchmaking() {
             _setPresenceStatus('online');
             stopMatchmakingCountdown();
+            hideMatchmakingFloatBar();
             // Beritahu tamu party (jika ada) bahwa host membatalkan antrian
             if (currentUser && (_partyFriendUid || _partyFriend2Uid)) {
                 if (_partyFriendUid)  db.ref(`users/${_partyFriendUid}/partyKick`).set({ disbanded: true });
@@ -5402,6 +5454,9 @@
                     break;
 
                 case 'PROVINCES_SELECTED': {
+                    hideMatchmakingFloatBar();
+                    closeAllScreens();
+                    DOM.matchmakingScreen.classList.add('active');
                     const provinces = data.provinces || [];
                     const mandatory = data.mandatory || 'Bangka Belitung';
                     const grid = document.getElementById('prov-grid');
@@ -5721,10 +5776,8 @@
                             partySize: data.partySize
                         }));
                     }
-                    // Tampilkan layar matchmaking (menunggu match)
-                    DOM.matchmakingScreen.classList.add('active');
-                    DOM.matchmakingScreen.querySelector('#matchmaking-idle').style.display = 'none';
-                    DOM.matchmakingScreen.querySelector('#matchmaking-waiting').style.display = 'flex';
+                    // Tampilkan floating bar (menunggu match sebagai tamu party)
+                    showMatchmakingFloatBar();
                     DOM.matchmakingScreen.querySelector('#match-starting').style.display = 'none';
                     DOM.matchmakingScreen.querySelector('#queue-status').textContent = 'Party siap — menunggu lawan...';
                     break;
@@ -9852,6 +9905,16 @@
         <span class="lobby-bubble-dot"></span>
     </div>
 
+    <!-- FLOATING MATCHMAKING BAR -->
+    <div id="matchmaking-float-bar" style="display:none;">
+        <span class="mf-icon">🔍</span>
+        <div class="mf-info">
+            <span class="mf-label">Mencari Lawan...</span>
+            <span class="mf-timer" id="mf-timer">00:00</span>
+        </div>
+        <button class="mf-cancel-btn" onclick="playSound('x');cancelMatchmaking()">✕</button>
+    </div>
+
     <!-- TOAST CONTAINER -->
     <div id="toast-container"></div>
 
@@ -9875,3 +9938,33 @@
     </div>
 </body>
 </html>
+<script>
+// =============================================
+// FLOATING MATCHMAKING BAR - TIMER
+// =============================================
+let _mfTimerInterval = null;
+
+function showMatchmakingFloatBar() {
+    const bar = document.getElementById('matchmaking-float-bar');
+    if (!bar) return;
+    bar.style.display = 'flex';
+    let totalSecs = 0;
+    clearInterval(_mfTimerInterval);
+    _mfTimerInterval = setInterval(() => {
+        totalSecs++;
+        const m = String(Math.floor(totalSecs / 60)).padStart(2, '0');
+        const s = String(totalSecs % 60).padStart(2, '0');
+        const el = document.getElementById('mf-timer');
+        if (el) el.textContent = `${m}:${s}`;
+    }, 1000);
+}
+
+function hideMatchmakingFloatBar() {
+    const bar = document.getElementById('matchmaking-float-bar');
+    if (bar) bar.style.display = 'none';
+    clearInterval(_mfTimerInterval);
+    _mfTimerInterval = null;
+    const el = document.getElementById('mf-timer');
+    if (el) el.textContent = '00:00';
+}
+</script>
