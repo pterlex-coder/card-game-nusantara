@@ -5484,10 +5484,23 @@
                     db.ref(`users/${currentUser.uid}/partyCancelSearch`).off();
                     db.ref(`users/${currentUser.uid}/partyCancelSearch`).remove().catch(() => {});
                 }
+                // FIX: Matikan listener partyCancelSearch tamu juga (agar tidak re-trigger
+                // karena node ini mungkin masih ada dari siklus sebelumnya)
+                if (_isPartyGuest) {
+                    const _selfCancelRef = db.ref(`users/${currentUser.uid}/partyCancelSearch`);
+                    _selfCancelRef.off();
+                    _selfCancelRef.remove().catch(() => {});
+                }
                 // Kembalikan _partyId ke Firebase ID asli agar lobi party bisa berfungsi
                 if (_partyFirebaseId) _partyId = _partyFirebaseId;
                 _setPresenceStatus('inLobby');
-                document.getElementById('party-lobby-overlay').style.display = 'flex';
+                // FIX: Untuk tamu, panggil _showGuestPartyLobby agar UI lobi ter-render ulang
+                // dengan benar (bukan sekadar menampilkan overlay kosong)
+                if (_isPartyGuest && _partyHostUid && _partyHostName) {
+                    _showGuestPartyLobby(_partyHostUid, _partyHostName, _myPartySlot);
+                } else {
+                    document.getElementById('party-lobby-overlay').style.display = 'flex';
+                }
                 // PATCH A: Jika pembatal adalah tamu, pasang ulang listener partySignal
                 // agar bisa merespons jika host menekan Mulai lagi
                 if (_isPartyGuest && _partyFirebaseId) {
@@ -9121,20 +9134,28 @@
                     if (!snap.exists()) return;
                     const val = snap.val();
                     cancelSearchRef.remove().catch(() => {});
+                    // FIX: Hapus guard floatBar === 'none' — sinyal cancel harus selalu diproses
+                    // bahkan jika float bar sudah tersembunyi akibat race condition timing.
+                    // Jika tidak sedang mencari (ws null) dan bukan tamu, abaikan saja.
                     const floatBar = document.getElementById('matchmaking-float-bar');
-                    if (!floatBar || floatBar.style.display === 'none') return; // tidak sedang mencari
-                    // Hentikan pencarian lawan
-                    hideMatchmakingFloatBar();
-                    stopMatchmakingCountdown();
-                    if (ws) {
-                        try { ws.send(JSON.stringify({ type: 'LEAVE_QUEUE' })); } catch(e) {}
-                        ws.onclose = null; ws.onerror = null;
-                        ws.close();
-                        ws = null;
+                    const isSearching = floatBar && floatBar.style.display !== 'none';
+                    if (isSearching) {
+                        // Hentikan pencarian lawan
+                        hideMatchmakingFloatBar();
+                        stopMatchmakingCountdown();
+                        if (ws) {
+                            try { ws.send(JSON.stringify({ type: 'LEAVE_QUEUE' })); } catch(e) {}
+                            ws.onclose = null; ws.onerror = null;
+                            ws.close();
+                            ws = null;
+                        }
+                        soundEffects.bgMusic2.pause();
+                        soundEffects.bgMusic2.currentTime = 0;
+                        soundEffects.bgMusic.play().catch(() => {});
+                    } else if (!_isPartyGuest) {
+                        // Host tidak sedang mencari (float bar sudah hilang), abaikan
+                        return;
                     }
-                    soundEffects.bgMusic2.pause();
-                    soundEffects.bgMusic2.currentTime = 0;
-                    soundEffects.bgMusic.play().catch(() => {});
                     _partyQueueSize = null;
                     // Kembalikan _partyId ke Firebase ID asli agar lobi party berfungsi
                     if (_partyFirebaseId) _partyId = _partyFirebaseId;
