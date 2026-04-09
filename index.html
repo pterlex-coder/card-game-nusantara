@@ -4284,12 +4284,6 @@
         }
 
         function confirmLogout() {
-            const floatBar = document.getElementById('matchmaking-float-bar');
-            const isSearching = floatBar && floatBar.style.display !== 'none';
-            if (isSearching) {
-                showToast('⚠️ Mohon batalkan dulu proses mencari lawan!', 'warning', 3500);
-                return;
-            }
             if (confirm('🚪 Yakin ingin logout?\n\n⚠️ Jika sedang dalam pertandingan, aksi akan dijalankan otomatis sampai game selesai.')) {
                 doLogout();
             }
@@ -4348,6 +4342,12 @@
             if (_partyKickRef)         { _partyKickRef.off();         _partyKickRef = null; }
             if (_partyGuestRosterRef)  { _partyGuestRosterRef.off();  _partyGuestRosterRef = null; }
             if (_guestPartyStatusRef)  { _guestPartyStatusRef.off();  _guestPartyStatusRef = null; }
+            // Bersihkan listener partyCancelSearch dan hapus node-nya dari Firebase
+            if (currentUser) {
+                const _csRef = db.ref(`users/${currentUser.uid}/partyCancelSearch`);
+                _csRef.off();
+                _csRef.remove().catch(() => {});
+            }
             _partyInviteData = null;
             _partyFriendUid = null;
             _partyFriendName = null;
@@ -5434,47 +5434,54 @@
         }
 
         function cancelMatchmaking() {
-            _setPresenceStatus('online');
             stopMatchmakingCountdown();
             hideMatchmakingFloatBar();
-            if (currentUser) {
-                if (_isPartyGuest) {
-                    // Guest yang membatalkan → beritahu host dan guest lain
-                    if (_partyHostUid) db.ref(`users/${_partyHostUid}/partyKick`).set({ disbanded: true, cancelledBy: currentNickname || 'Pemain' });
-                    // Beritahu guest lain jika ada (dari partyRoster)
-                    if (_partyId) {
-                        db.ref(`partyRoster/${_partyId}`).once('value').then(snap => {
-                            if (!snap.exists()) return;
-                            snap.forEach(child => {
-                                const uid = child.key;
-                                if (uid !== currentUser.uid) {
-                                    db.ref(`users/${uid}/partyKick`).set({ disbanded: true, cancelledBy: currentNickname || 'Pemain' });
-                                }
-                            });
-                        });
-                    }
-                } else {
-                    // Host yang membatalkan → beritahu semua tamu
-                    if (_partyFriendUid)  db.ref(`users/${_partyFriendUid}/partyKick`).set({ disbanded: true, cancelledBy: currentNickname || 'Host' });
-                    if (_partyFriend2Uid) db.ref(`users/${_partyFriend2Uid}/partyKick`).set({ disbanded: true, cancelledBy: currentNickname || 'Host' });
-                }
-            }
-            _partyId = null; // reset party state
-            _partyQueueSize = null;
+
+            // Hentikan antrian di server
             if (ws) {
                 try { ws.send(JSON.stringify({ type: 'LEAVE_QUEUE' })); } catch(e) {}
                 ws.onclose = null; ws.onerror = null;
                 ws.close();
                 ws = null;
             }
+
+            soundEffects.bgMusic2.pause();
+            soundEffects.bgMusic2.currentTime = 0;
+            soundEffects.bgMusic.play().catch(() => {});
+
+            // Jika sedang dalam party, beritahu semua anggota untuk batal cari lawan
+            // lalu kembalikan SEMUA ke lobi party (party tidak dibubarkan)
+            if (_partyId && currentUser) {
+                const cancellerName = currentNickname || 'Pemain';
+                // Beritahu anggota lain via Firebase agar mereka juga berhenti mencari
+                db.ref(`partyRoster/${_partyId}`).once('value').then(snap => {
+                    if (!snap.exists()) return;
+                    snap.forEach(child => {
+                        const uid = child.key;
+                        if (uid !== currentUser.uid) {
+                            db.ref(`users/${uid}/partyCancelSearch`).set({
+                                cancelledBy: cancellerName,
+                                ts: Date.now()
+                            }).catch(() => {});
+                        }
+                    });
+                }).catch(() => {});
+
+                // Kembalikan diri sendiri ke lobi party
+                _partyQueueSize = null;
+                _setPresenceStatus('inLobby');
+                document.getElementById('party-lobby-overlay').style.display = 'flex';
+                return;
+            }
+
+            // Tidak ada party → kembali ke matchmaking-idle biasa
+            _setPresenceStatus('online');
+            _partyQueueSize = null;
             DOM.matchmakingScreen.classList.add('active');
             DOM.matchmakingScreen.querySelector('#matchmaking-idle').style.display = 'flex';
             DOM.matchmakingScreen.querySelector('#matchmaking-waiting').style.display = 'none';
             DOM.matchmakingScreen.querySelector('#match-starting').style.display = 'none';
             DOM.matchmakingScreen.style.justifyContent = 'flex-end';
-            soundEffects.bgMusic2.pause();
-            soundEffects.bgMusic2.currentTime = 0;
-            soundEffects.bgMusic.play().catch(() => {});
         }
 
         function handleServerMessage(data) {
@@ -9000,6 +9007,37 @@
                     } else showToast('ℹ️ Kamu telah dikeluarkan dari party.', 'info');
                 });
             }
+            // Listener partyCancelSearch: salah satu anggota membatalkan pencarian lawan
+            // → semua anggota kembali ke lobi party TANPA membubarkan party
+            if (currentUser) {
+                const cancelSearchRef = db.ref(`users/${currentUser.uid}/partyCancelSearch`);
+                cancelSearchRef.off();
+                cancelSearchRef.on('value', snap => {
+                    if (!snap.exists()) return;
+                    const val = snap.val();
+                    cancelSearchRef.remove().catch(() => {});
+                    const floatBar = document.getElementById('matchmaking-float-bar');
+                    if (!floatBar || floatBar.style.display === 'none') return; // tidak sedang mencari
+                    // Hentikan pencarian lawan
+                    hideMatchmakingFloatBar();
+                    stopMatchmakingCountdown();
+                    if (ws) {
+                        try { ws.send(JSON.stringify({ type: 'LEAVE_QUEUE' })); } catch(e) {}
+                        ws.onclose = null; ws.onerror = null;
+                        ws.close();
+                        ws = null;
+                    }
+                    soundEffects.bgMusic2.pause();
+                    soundEffects.bgMusic2.currentTime = 0;
+                    soundEffects.bgMusic.play().catch(() => {});
+                    _partyQueueSize = null;
+                    _setPresenceStatus('inLobby');
+                    // Kembalikan ke lobi party (party tidak dibubarkan)
+                    document.getElementById('party-lobby-overlay').style.display = 'flex';
+                    const cancellerName = val?.cancelledBy || 'Salah satu pemain';
+                    showToast(`ℹ️ ${cancellerName} membatalkan pencarian lawan.`, 'info');
+                });
+            }
             // Listener partyRoster: deteksi host disconnect/refresh (partyRoster terhapus total)
             // sekaligus deteksi tamu lain keluar
             if (_partyGuestRosterRef) { _partyGuestRosterRef.off(); _partyGuestRosterRef = null; }
@@ -10008,46 +10046,15 @@
 // =============================================
 let _mfTimerInterval = null;
 
-// ── Matchmaking Guard ────────────────────────────────────────────────────────
-// Intercept klik pada tombol-tombol yang tidak boleh diproses saat mencari lawan.
-// Tombol TETAP bisa diklik (tidak disabled), tapi aksi diganti toast peringatan.
-const _MM_GUARD_SELECTORS = [
-    '.btn-start',          // tombol RANKED
-    '.btn-kostum-style',   // tombol KOSTUM
-    '.btn-logout-settings' // tombol LOGOUT di settings
-];
-let _mmGuardAttached = false;
-
-function _mmGuardHandler(e) {
-    const bar = document.getElementById('matchmaking-float-bar');
-    if (!bar || bar.style.display === 'none') return; // matchmaking tidak aktif, biarkan normal
-    const matched = _MM_GUARD_SELECTORS.some(sel => e.target.closest(sel));
-    if (!matched) return;
-    e.stopImmediatePropagation();
-    e.preventDefault();
-    // showToast tersedia di scope utama (dalam </body> sebelumnya)
-    if (typeof showToast === 'function') {
-        showToast('⚠️ Mohon batalkan dulu proses mencari lawan!', 'warning', 3000);
-    }
-}
-
-function _attachMmGuard() {
-    if (_mmGuardAttached) return;
-    document.addEventListener('click', _mmGuardHandler, true); // capture phase
-    _mmGuardAttached = true;
-}
-
-function _detachMmGuard() {
-    document.removeEventListener('click', _mmGuardHandler, true);
-    _mmGuardAttached = false;
-}
-// ────────────────────────────────────────────────────────────────────────────
-
 function showMatchmakingFloatBar() {
     const bar = document.getElementById('matchmaking-float-bar');
     if (!bar) return;
     bar.style.display = 'flex';
-    _attachMmGuard();
+    // Disable tombol Ranked dan Kostum saat mencari lawan
+    const btnRanked = document.querySelector('.btn-start');
+    const btnKostum = document.querySelector('.btn-kostum-style');
+    if (btnRanked) { btnRanked.disabled = true; btnRanked.style.opacity = '0.4'; btnRanked.style.cursor = 'not-allowed'; btnRanked.title = 'Batalkan proses mencari lawan terlebih dahulu'; }
+    if (btnKostum) { btnKostum.disabled = true; btnKostum.style.opacity = '0.4'; btnKostum.style.cursor = 'not-allowed'; btnKostum.title = 'Batalkan proses mencari lawan terlebih dahulu'; }
     let totalSecs = 0;
     clearInterval(_mfTimerInterval);
     _mfTimerInterval = setInterval(() => {
@@ -10066,6 +10073,10 @@ function hideMatchmakingFloatBar() {
     _mfTimerInterval = null;
     const el = document.getElementById('mf-timer');
     if (el) el.textContent = '00:00';
-    _detachMmGuard();
+    // Re-enable tombol Ranked dan Kostum
+    const btnRanked = document.querySelector('.btn-start');
+    const btnKostum = document.querySelector('.btn-kostum-style');
+    if (btnRanked) { btnRanked.disabled = false; btnRanked.style.opacity = ''; btnRanked.style.cursor = ''; btnRanked.title = ''; }
+    if (btnKostum) { btnKostum.disabled = false; btnKostum.style.opacity = ''; btnKostum.style.cursor = ''; btnKostum.title = ''; }
 }
 </script>
