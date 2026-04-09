@@ -5437,6 +5437,27 @@
             stopMatchmakingCountdown();
             hideMatchmakingFloatBar();
 
+            // Jika sedang dalam party, beritahu semua anggota untuk batal cari lawan
+            // HARUS dilakukan SEBELUM ws.close() agar LEAVE_QUEUE masih terkirim
+            if ((_partyId || _partyFirebaseId) && currentUser) {
+                const cancellerName = currentNickname || 'Pemain';
+                // Gunakan _partyFirebaseId (ID roster Firebase asli, bukan sharedPartyId qp_xxx)
+                const firebasePartyId = _partyFirebaseId || _partyId;
+                // Beritahu anggota lain via Firebase agar mereka juga berhenti mencari
+                db.ref(`partyRoster/${firebasePartyId}`).once('value').then(snap => {
+                    if (!snap.exists()) return;
+                    snap.forEach(child => {
+                        const uid = child.key;
+                        if (uid !== currentUser.uid && uid !== 'host') {
+                            db.ref(`users/${uid}/partyCancelSearch`).set({
+                                cancelledBy: cancellerName,
+                                ts: Date.now()
+                            }).catch(() => {});
+                        }
+                    });
+                }).catch(() => {});
+            }
+
             // Hentikan antrian di server
             if (ws) {
                 try { ws.send(JSON.stringify({ type: 'LEAVE_QUEUE' })); } catch(e) {}
@@ -5449,26 +5470,11 @@
             soundEffects.bgMusic2.currentTime = 0;
             soundEffects.bgMusic.play().catch(() => {});
 
-            // Jika sedang dalam party, beritahu semua anggota untuk batal cari lawan
-            // lalu kembalikan SEMUA ke lobi party (party tidak dibubarkan)
-            if (_partyId && currentUser) {
-                const cancellerName = currentNickname || 'Pemain';
-                // Beritahu anggota lain via Firebase agar mereka juga berhenti mencari
-                db.ref(`partyRoster/${_partyId}`).once('value').then(snap => {
-                    if (!snap.exists()) return;
-                    snap.forEach(child => {
-                        const uid = child.key;
-                        if (uid !== currentUser.uid) {
-                            db.ref(`users/${uid}/partyCancelSearch`).set({
-                                cancelledBy: cancellerName,
-                                ts: Date.now()
-                            }).catch(() => {});
-                        }
-                    });
-                }).catch(() => {});
-
-                // Kembalikan diri sendiri ke lobi party
+            // Jika sedang dalam party → kembalikan ke lobi party (party tidak dibubarkan)
+            if ((_partyId || _partyFirebaseId) && currentUser) {
                 _partyQueueSize = null;
+                // Kembalikan _partyId ke Firebase ID asli agar lobi party bisa berfungsi
+                if (_partyFirebaseId) _partyId = _partyFirebaseId;
                 _setPresenceStatus('inLobby');
                 document.getElementById('party-lobby-overlay').style.display = 'flex';
                 return;
@@ -5477,6 +5483,7 @@
             // Tidak ada party → kembali ke matchmaking-idle biasa
             _setPresenceStatus('online');
             _partyQueueSize = null;
+            _partyFirebaseId = null;
             DOM.matchmakingScreen.classList.add('active');
             DOM.matchmakingScreen.querySelector('#matchmaking-idle').style.display = 'flex';
             DOM.matchmakingScreen.querySelector('#matchmaking-waiting').style.display = 'none';
@@ -5486,6 +5493,30 @@
 
         function handleServerMessage(data) {
             switch (data.type) {
+                case 'PARTY_SEARCH_CANCELLED': {
+                    // Salah satu anggota party membatalkan dari sisi server (via LEAVE_QUEUE)
+                    // Hentikan pencarian dan kembalikan ke lobi party
+                    hideMatchmakingFloatBar();
+                    stopMatchmakingCountdown();
+                    if (ws) {
+                        try { ws.send(JSON.stringify({ type: 'LEAVE_QUEUE' })); } catch(e) {}
+                        ws.onclose = null; ws.onerror = null;
+                        ws.close();
+                        ws = null;
+                    }
+                    soundEffects.bgMusic2.pause();
+                    soundEffects.bgMusic2.currentTime = 0;
+                    soundEffects.bgMusic.play().catch(() => {});
+                    _partyQueueSize = null;
+                    // Kembalikan _partyId ke Firebase ID asli agar lobi berfungsi
+                    if (_partyFirebaseId) _partyId = _partyFirebaseId;
+                    _setPresenceStatus('inLobby');
+                    document.getElementById('party-lobby-overlay').style.display = 'flex';
+                    const cancelName = data.cancelledByName || 'Salah satu pemain';
+                    showToast(`ℹ️ ${cancelName} membatalkan pencarian lawan.`, 'info');
+                    break;
+                }
+
                 case 'QUEUE_STATUS':
                     DOM.matchmakingScreen.querySelector('#queue-status').textContent = data.message;
                     break;
@@ -5809,6 +5840,7 @@
                 case 'PARTY_QUEUING': {
                     // Server memerintahkan semua anggota party untuk segera masuk antrian
                     // Berlaku saat party lobby berbasis WebSocket digunakan (bukan Firebase)
+                    // _partyFirebaseId sudah diset sebelumnya — jangan overwrite
                     _partyId = data.sharedPartyId;
                     _partyQueueSize = data.partySize || 2;
                     // Kirim JOIN_MATCHMAKING pada koneksi yang sudah ada
@@ -8365,6 +8397,7 @@
         let _partyFriend2Uid  = null;  // Slot 3
         let _partyFriend2Name = null;
         let _partyId          = null;
+        let _partyFirebaseId  = null;  // ID Firebase party asli (party_xxx) — terpisah dari sharedPartyId (qp_xxx) saat queuing
         let _partyInviteData  = null;
         let _partyStatusRef   = null;  // Listener accept/decline slot 2
         let _partyStatus2Ref  = null;  // Listener accept/decline slot 3
@@ -8620,6 +8653,7 @@
             if (!_partyId) {
                 // Buat partyId baru pertama kali teman dipilih
                 _partyId = `party_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+                _partyFirebaseId = _partyId; // Simpan ID Firebase asli
                 if (currentUser) {
                     // Bersihkan partyStatus lama agar listener tamu tidak baca data basi
                     db.ref(`users/${currentUser.uid}/partyStatus`).remove().catch(() => {});
@@ -8875,6 +8909,7 @@
             }).catch(() => {});
             // Simpan partyId, host info, lalu tampilkan party lobby dalam mode tamu
             _partyId = inv.partyId;
+            _partyFirebaseId = inv.partyId; // Simpan ID Firebase asli untuk broadcast cancel
             _partyHostUid = inv.fromUid;
             _isPartyGuest = true;
             _setPresenceStatus('inLobby');
@@ -8903,6 +8938,7 @@
                 if (_partySignalRef) { _partySignalRef.off(); _partySignalRef = null; }
                 // Tutup guest party lobby lalu masuk antrian
                 if (_isPartyGuest) _closeGuestPartyLobby();
+                _partyFirebaseId = sig.partyId; // Pertahankan Firebase ID asli sebelum diganti sharedPartyId
                 _partyId = sig.partyId;
                 _partyQueueSize = sig.partySize || 2;
                 startMatchmaking();
@@ -9031,6 +9067,8 @@
                     soundEffects.bgMusic2.currentTime = 0;
                     soundEffects.bgMusic.play().catch(() => {});
                     _partyQueueSize = null;
+                    // Kembalikan _partyId ke Firebase ID asli agar lobi party berfungsi
+                    if (_partyFirebaseId) _partyId = _partyFirebaseId;
                     _setPresenceStatus('inLobby');
                     // Kembalikan ke lobi party (party tidak dibubarkan)
                     document.getElementById('party-lobby-overlay').style.display = 'flex';
