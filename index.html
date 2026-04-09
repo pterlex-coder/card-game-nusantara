@@ -5400,16 +5400,23 @@
                 startClientKeepAlive();
                 const playerName = currentNickname || lsGet(LS.NICKNAME) || 'Player ' + Math.floor(Math.random() * 1000);
 
-                // PATCH: Tamu party (_isPartyGuest) TIDAK kirim JOIN_MATCHMAKING di sini.
-                // Tamu akan menunggu PARTY_QUEUING dari server (yang berisi sharedPartyId benar).
-                // Setelah WS terkoneksi, kirim REJOIN_PARTY_LOBBY agar server tahu socket tamu sudah siap.
-                if (_isPartyGuest && (_partyFirebaseId || _partyId)) {
+                // REJOIN_PARTY_LOBBY hanya untuk reconnect ke WS partyLobby yang sudah ada di server.
+                // Tamu Firebase party (_isPartyGuest=true + _partyQueueSize set dari partySignal)
+                // harus kirim JOIN_MATCHMAKING langsung — server tidak punya partyLobby Firebase di WS,
+                // REJOIN akan dapat PARTY_NOT_FOUND dan tamu kembali ke lobi.
+                //
+                // Tamu reconnect WS: _isPartyGuest=true, _partyQueueSize=null (belum dapat PARTY_QUEUING lagi)
+                // Host/solo: _isPartyGuest=false → JOIN_MATCHMAKING
+                const isReconnectingWsGuest = _isPartyGuest && _partyQueueSize === null && (_partyFirebaseId || _partyId);
+
+                if (isReconnectingWsGuest) {
                     ws.send(JSON.stringify({
                         type: 'REJOIN_PARTY_LOBBY',
                         userUid: currentUser ? currentUser.uid : '',
                         playerName: playerName
                     }));
                 } else {
+                    // Solo, host party Firebase, ATAU tamu Firebase (sudah punya _partyId + _partyQueueSize)
                     ws.send(JSON.stringify({
                         type: 'JOIN_MATCHMAKING',
                         playerName: playerName,
@@ -5896,14 +5903,11 @@
                     break;
 
                 case 'PARTY_NOT_FOUND':
-                    // Server tidak punya party queuing untuk tamu ini — batalkan dan kembali ke lobi
+                    // Server tidak punya party queuing untuk tamu ini — kembali ke lobi.
+                    // JANGAN tutup ws: koneksi masih valid, tidak perlu disconnect.
+                    // (ws.close() di sini adalah penyebab log "Disconnected: re7 / Hidup Damai" 0ms)
                     hideMatchmakingFloatBar();
                     stopMatchmakingCountdown();
-                    if (ws) {
-                        ws.onclose = null; ws.onerror = null;
-                        ws.close();
-                        ws = null;
-                    }
                     _partyQueueSize = null;
                     if (_partyFirebaseId) _partyId = _partyFirebaseId;
                     _setPresenceStatus('inLobby');
