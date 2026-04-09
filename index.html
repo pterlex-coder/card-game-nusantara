@@ -5431,10 +5431,27 @@
             _setPresenceStatus('online');
             stopMatchmakingCountdown();
             hideMatchmakingFloatBar();
-            // Beritahu tamu party (jika ada) bahwa host membatalkan antrian
-            if (currentUser && (_partyFriendUid || _partyFriend2Uid)) {
-                if (_partyFriendUid)  db.ref(`users/${_partyFriendUid}/partyKick`).set({ disbanded: true });
-                if (_partyFriend2Uid) db.ref(`users/${_partyFriend2Uid}/partyKick`).set({ disbanded: true });
+            if (currentUser) {
+                if (_isPartyGuest) {
+                    // Guest yang membatalkan → beritahu host dan guest lain
+                    if (_partyHostUid) db.ref(`users/${_partyHostUid}/partyKick`).set({ disbanded: true, cancelledBy: currentNickname || 'Pemain' });
+                    // Beritahu guest lain jika ada (dari partyRoster)
+                    if (_partyId) {
+                        db.ref(`partyRoster/${_partyId}`).once('value').then(snap => {
+                            if (!snap.exists()) return;
+                            snap.forEach(child => {
+                                const uid = child.key;
+                                if (uid !== currentUser.uid) {
+                                    db.ref(`users/${uid}/partyKick`).set({ disbanded: true, cancelledBy: currentNickname || 'Pemain' });
+                                }
+                            });
+                        });
+                    }
+                } else {
+                    // Host yang membatalkan → beritahu semua tamu
+                    if (_partyFriendUid)  db.ref(`users/${_partyFriendUid}/partyKick`).set({ disbanded: true, cancelledBy: currentNickname || 'Host' });
+                    if (_partyFriend2Uid) db.ref(`users/${_partyFriend2Uid}/partyKick`).set({ disbanded: true, cancelledBy: currentNickname || 'Host' });
+                }
             }
             _partyId = null; // reset party state
             _partyQueueSize = null;
@@ -5470,6 +5487,9 @@
                     hideMatchmakingFloatBar();
                     closeAllScreens();
                     DOM.matchmakingScreen.classList.add('active');
+                    // Sembunyikan idle (tombol RANKED dll) saat lawan ditemukan
+                    DOM.matchmakingScreen.querySelector('#matchmaking-idle').style.display = 'none';
+                    DOM.matchmakingScreen.querySelector('#matchmaking-waiting').style.display = 'none';
                     const provinces = data.provinces || [];
                     const mandatory = data.mandatory || 'Bangka Belitung';
                     const grid = document.getElementById('prov-grid');
@@ -8964,8 +8984,14 @@
                     _closeGuestPartyLobby();
                     _partyId = null; _partyQueueSize = null;
                     _setPresenceStatus('online');
-                    if (val && val.disbanded) showToast('ℹ️ Party telah dibubarkan oleh host.', 'info');
-                    else showToast('ℹ️ Kamu telah dikeluarkan dari party.', 'info');
+                    if (val && val.disbanded) {
+                        const floatBar = document.getElementById('matchmaking-float-bar');
+                        const isInQueue = floatBar && floatBar.style.display !== 'none';
+                        const cancellerName = val.cancelledBy || 'Salah satu pemain';
+                        showToast(isInQueue
+                            ? `ℹ️ ${cancellerName} membatalkan proses mencari lawan.`
+                            : `ℹ️ Party telah dibubarkan oleh ${cancellerName}.`, 'info');
+                    } else showToast('ℹ️ Kamu telah dikeluarkan dari party.', 'info');
                 });
             }
             // Listener partyRoster: deteksi host disconnect/refresh (partyRoster terhapus total)
@@ -9015,6 +9041,25 @@
             const myName = currentNickname || lsGet(LS.NICKNAME) || 'Kamu';
             document.getElementById('pslot-1-name').textContent = myName;
             document.getElementById('pslot-1-icon').innerHTML = _getAvatarWithFrameHtml(54);
+            // Jika sedang dalam antrian (floating bar aktif), hentikan proses dan tampilkan halaman utama kembali
+            const floatBar = document.getElementById('matchmaking-float-bar');
+            if (floatBar && floatBar.style.display !== 'none') {
+                hideMatchmakingFloatBar();
+                stopMatchmakingCountdown();
+                if (ws) {
+                    try { ws.send(JSON.stringify({ type: 'LEAVE_QUEUE' })); } catch(e) {}
+                    ws.onclose = null; ws.onerror = null;
+                    ws.close();
+                    ws = null;
+                }
+                DOM.matchmakingScreen.classList.add('active');
+                DOM.matchmakingScreen.querySelector('#matchmaking-idle').style.display = 'flex';
+                DOM.matchmakingScreen.querySelector('#matchmaking-waiting').style.display = 'none';
+                DOM.matchmakingScreen.style.justifyContent = 'flex-end';
+                soundEffects.bgMusic2.pause();
+                soundEffects.bgMusic2.currentTime = 0;
+                soundEffects.bgMusic.play().catch(() => {});
+            }
         }
 
         async function declinePartyInvite() {
