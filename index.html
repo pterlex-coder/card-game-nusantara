@@ -5377,8 +5377,12 @@
         function startMatchmaking() {
             _setPresenceStatus('inQueue');
             // bgMusic tetap jalan saat mencari lawan, bgMusic2 akan diputar saat memasuki pertandingan
-            // Sembunyikan matchmaking screen, tampilkan floating bar
-            DOM.matchmakingScreen.classList.remove('active');
+            // Tetap tampilkan matchmaking screen (agar tombol lain masih terlihat)
+            // Sembunyikan hanya bagian waiting, tampilkan floating bar
+            DOM.matchmakingScreen.classList.add('active');
+            DOM.matchmakingScreen.querySelector('#matchmaking-idle').style.display = 'flex';
+            DOM.matchmakingScreen.querySelector('#matchmaking-waiting').style.display = 'none';
+            DOM.matchmakingScreen.style.justifyContent = 'flex-end';
             showMatchmakingFloatBar();
             startMatchmakingCountdown();
 
