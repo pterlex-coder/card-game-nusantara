@@ -4284,6 +4284,12 @@
         }
 
         function confirmLogout() {
+            const floatBar = document.getElementById('matchmaking-float-bar');
+            const isSearching = floatBar && floatBar.style.display !== 'none';
+            if (isSearching) {
+                showToast('⚠️ Mohon batalkan dulu proses mencari lawan!', 'warning', 3500);
+                return;
+            }
             if (confirm('🚪 Yakin ingin logout?\n\n⚠️ Jika sedang dalam pertandingan, aksi akan dijalankan otomatis sampai game selesai.')) {
                 doLogout();
             }
@@ -10002,15 +10008,46 @@
 // =============================================
 let _mfTimerInterval = null;
 
+// ── Matchmaking Guard ────────────────────────────────────────────────────────
+// Intercept klik pada tombol-tombol yang tidak boleh diproses saat mencari lawan.
+// Tombol TETAP bisa diklik (tidak disabled), tapi aksi diganti toast peringatan.
+const _MM_GUARD_SELECTORS = [
+    '.btn-start',          // tombol RANKED
+    '.btn-kostum-style',   // tombol KOSTUM
+    '.btn-logout-settings' // tombol LOGOUT di settings
+];
+let _mmGuardAttached = false;
+
+function _mmGuardHandler(e) {
+    const bar = document.getElementById('matchmaking-float-bar');
+    if (!bar || bar.style.display === 'none') return; // matchmaking tidak aktif, biarkan normal
+    const matched = _MM_GUARD_SELECTORS.some(sel => e.target.closest(sel));
+    if (!matched) return;
+    e.stopImmediatePropagation();
+    e.preventDefault();
+    // showToast tersedia di scope utama (dalam </body> sebelumnya)
+    if (typeof showToast === 'function') {
+        showToast('⚠️ Mohon batalkan dulu proses mencari lawan!', 'warning', 3000);
+    }
+}
+
+function _attachMmGuard() {
+    if (_mmGuardAttached) return;
+    document.addEventListener('click', _mmGuardHandler, true); // capture phase
+    _mmGuardAttached = true;
+}
+
+function _detachMmGuard() {
+    document.removeEventListener('click', _mmGuardHandler, true);
+    _mmGuardAttached = false;
+}
+// ────────────────────────────────────────────────────────────────────────────
+
 function showMatchmakingFloatBar() {
     const bar = document.getElementById('matchmaking-float-bar');
     if (!bar) return;
     bar.style.display = 'flex';
-    // Disable tombol Ranked dan Kostum saat mencari lawan
-    const btnRanked = document.querySelector('.btn-start');
-    const btnKostum = document.querySelector('.btn-kostum-style');
-    if (btnRanked) { btnRanked.disabled = true; btnRanked.style.opacity = '0.4'; btnRanked.style.cursor = 'not-allowed'; btnRanked.title = 'Batalkan proses mencari lawan terlebih dahulu'; }
-    if (btnKostum) { btnKostum.disabled = true; btnKostum.style.opacity = '0.4'; btnKostum.style.cursor = 'not-allowed'; btnKostum.title = 'Batalkan proses mencari lawan terlebih dahulu'; }
+    _attachMmGuard();
     let totalSecs = 0;
     clearInterval(_mfTimerInterval);
     _mfTimerInterval = setInterval(() => {
@@ -10029,10 +10066,6 @@ function hideMatchmakingFloatBar() {
     _mfTimerInterval = null;
     const el = document.getElementById('mf-timer');
     if (el) el.textContent = '00:00';
-    // Re-enable tombol Ranked dan Kostum
-    const btnRanked = document.querySelector('.btn-start');
-    const btnKostum = document.querySelector('.btn-kostum-style');
-    if (btnRanked) { btnRanked.disabled = false; btnRanked.style.opacity = ''; btnRanked.style.cursor = ''; btnRanked.title = ''; }
-    if (btnKostum) { btnKostum.disabled = false; btnKostum.style.opacity = ''; btnKostum.style.cursor = ''; btnKostum.title = ''; }
+    _detachMmGuard();
 }
 </script>
