@@ -5453,6 +5453,9 @@
                                 cancelledBy: cancellerName,
                                 ts: Date.now()
                             }).catch(() => {});
+                            // PATCH C: Hapus partySignal lama agar tamu tidak salah masuk queue
+                            // dengan partyId lama jika Firebase lambat mengirim sinyal sebelumnya
+                            db.ref(`users/${uid}/partySignal`).remove().catch(() => {});
                         }
                     });
                 }).catch(() => {});
@@ -5477,6 +5480,11 @@
                 if (_partyFirebaseId) _partyId = _partyFirebaseId;
                 _setPresenceStatus('inLobby');
                 document.getElementById('party-lobby-overlay').style.display = 'flex';
+                // PATCH A: Jika pembatal adalah tamu, pasang ulang listener partySignal
+                // agar bisa merespons jika host menekan Mulai lagi
+                if (_isPartyGuest && _partyFirebaseId) {
+                    _startPartySignalListener(_partyFirebaseId);
+                }
                 return;
             }
 
@@ -5514,6 +5522,11 @@
                     document.getElementById('party-lobby-overlay').style.display = 'flex';
                     const cancelName = data.cancelledByName || 'Salah satu pemain';
                     showToast(`ℹ️ ${cancelName} membatalkan pencarian lawan.`, 'info');
+                    // PATCH A: Pasang ulang listener partySignal agar tamu bisa merespons
+                    // jika host menekan Mulai lagi di siklus berikutnya
+                    if (_isPartyGuest && _partyFirebaseId) {
+                        _startPartySignalListener(_partyFirebaseId);
+                    }
                     break;
                 }
 
@@ -8545,7 +8558,10 @@
             _partyFriend2Uid = null; _partyFriend2Name = null;
             _openPickerSlot = null;
             // keepPartyId=true digunakan oleh startMatchmakingFromParty agar partyId tidak direset
-            if (!keepPartyId) _partyId = null;
+            if (!keepPartyId) {
+                _partyId = null;
+                _partyFirebaseId = null; // PATCH B: reset agar siklus party berikutnya mulai bersih
+            }
         }
 
         function _stopPartyPresenceListener() {
@@ -8822,6 +8838,8 @@
             for (const friendUid of acceptedUids) {
                 if (!friendUid) continue;
                 const sigRef = db.ref(`users/${friendUid}/partySignal`);
+                // PATCH C: Hapus sinyal lama dulu sebelum tulis baru, cegah tamu baca sinyal stale
+                await sigRef.remove().catch(() => {});
                 await sigRef.set({ partyId: _partyId, partySize }).catch(() => {});
                 sigRef.onDisconnect().remove();
             }
@@ -9074,6 +9092,11 @@
                     document.getElementById('party-lobby-overlay').style.display = 'flex';
                     const cancellerName = val?.cancelledBy || 'Salah satu pemain';
                     showToast(`ℹ️ ${cancellerName} membatalkan pencarian lawan.`, 'info');
+                    // PATCH A: Pasang ulang listener partySignal agar tamu bisa merespons
+                    // jika host menekan Mulai lagi di siklus berikutnya
+                    if (_isPartyGuest && _partyFirebaseId) {
+                        _startPartySignalListener(_partyFirebaseId);
+                    }
                 });
             }
             // Listener partyRoster: deteksi host disconnect/refresh (partyRoster terhapus total)
