@@ -5448,15 +5448,16 @@
                     if (!snap.exists()) return;
                     snap.forEach(child => {
                         const uid = child.key;
-                        if (uid !== currentUser.uid && uid !== 'host') {
-                            db.ref(`users/${uid}/partyCancelSearch`).set({
-                                cancelledBy: cancellerName,
-                                ts: Date.now()
-                            }).catch(() => {});
-                            // PATCH C: Hapus partySignal lama agar tamu tidak salah masuk queue
-                            // dengan partyId lama jika Firebase lambat mengirim sinyal sebelumnya
-                            db.ref(`users/${uid}/partySignal`).remove().catch(() => {});
-                        }
+                        // Entry 'host' menyimpan UID host sebagai value-nya
+                        const targetUid = uid === 'host' ? child.val() : uid;
+                        if (!targetUid || targetUid === currentUser.uid) return;
+                        db.ref(`users/${targetUid}/partyCancelSearch`).set({
+                            cancelledBy: cancellerName,
+                            ts: Date.now()
+                        }).catch(() => {});
+                        // PATCH C: Hapus partySignal lama agar tamu tidak salah masuk queue
+                        // dengan partyId lama jika Firebase lambat mengirim sinyal sebelumnya
+                        db.ref(`users/${targetUid}/partySignal`).remove().catch(() => {});
                     });
                 }).catch(() => {});
             }
@@ -5476,6 +5477,11 @@
             // Jika sedang dalam party → kembalikan ke lobi party (party tidak dibubarkan)
             if ((_partyId || _partyFirebaseId) && currentUser) {
                 _partyQueueSize = null;
+                // Matikan listener partyCancelSearch host (agar tidak re-trigger setelah cancel sendiri)
+                if (!_isPartyGuest) {
+                    db.ref(`users/${currentUser.uid}/partyCancelSearch`).off();
+                    db.ref(`users/${currentUser.uid}/partyCancelSearch`).remove().catch(() => {});
+                }
                 // Kembalikan _partyId ke Firebase ID asli agar lobi party bisa berfungsi
                 if (_partyFirebaseId) _partyId = _partyFirebaseId;
                 _setPresenceStatus('inLobby');
@@ -8842,6 +8848,40 @@
                 await sigRef.remove().catch(() => {});
                 await sigRef.set({ partyId: _partyId, partySize }).catch(() => {});
                 sigRef.onDisconnect().remove();
+            }
+
+            // Pasang listener partyCancelSearch untuk HOST — agar host ikut berhenti
+            // jika salah satu tamu membatalkan pencarian lawan
+            if (currentUser && friendCount > 0) {
+                const hostCancelRef = db.ref(`users/${currentUser.uid}/partyCancelSearch`);
+                hostCancelRef.off();
+                hostCancelRef.on('value', snap => {
+                    if (!snap.exists()) return;
+                    const val = snap.val();
+                    hostCancelRef.remove().catch(() => {});
+                    hostCancelRef.off();
+                    const floatBar = document.getElementById('matchmaking-float-bar');
+                    if (!floatBar || floatBar.style.display === 'none') return;
+                    // Hentikan pencarian
+                    hideMatchmakingFloatBar();
+                    stopMatchmakingCountdown();
+                    if (ws) {
+                        try { ws.send(JSON.stringify({ type: 'LEAVE_QUEUE' })); } catch(e) {}
+                        ws.onclose = null; ws.onerror = null;
+                        ws.close();
+                        ws = null;
+                    }
+                    soundEffects.bgMusic2.pause();
+                    soundEffects.bgMusic2.currentTime = 0;
+                    soundEffects.bgMusic.play().catch(() => {});
+                    _partyQueueSize = null;
+                    if (_partyFirebaseId) _partyId = _partyFirebaseId;
+                    _setPresenceStatus('inLobby');
+                    // Kembalikan host ke lobi party
+                    document.getElementById('party-lobby-overlay').style.display = 'flex';
+                    const cancellerName = val?.cancelledBy || 'Salah satu pemain';
+                    showToast(`ℹ️ ${cancellerName} membatalkan pencarian lawan.`, 'info');
+                });
             }
 
             // keepPartyId hanya jika ada teman yang sudah join
