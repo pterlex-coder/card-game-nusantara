@@ -4357,6 +4357,8 @@
             _partyQueueSize = null;
             _isPartyGuest = false;
             _partyHostUid = null;
+            _partyHostName = null;
+            _myPartySlot = 2;
             _guestSlot3Uid = null;
             _openPickerSlot = null;
 
@@ -5525,7 +5527,12 @@
                     // Kembalikan _partyId ke Firebase ID asli agar lobi berfungsi
                     if (_partyFirebaseId) _partyId = _partyFirebaseId;
                     _setPresenceStatus('inLobby');
-                    document.getElementById('party-lobby-overlay').style.display = 'flex';
+                    // Jika tamu: render ulang tampilan lobi guest dengan data yang tersimpan
+                    if (_isPartyGuest && _partyHostUid && _partyHostName) {
+                        _showGuestPartyLobby(_partyHostUid, _partyHostName, _myPartySlot);
+                    } else {
+                        document.getElementById('party-lobby-overlay').style.display = 'flex';
+                    }
                     const cancelName = data.cancelledByName || 'Salah satu pemain';
                     showToast(`ℹ️ ${cancelName} membatalkan pencarian lawan.`, 'info');
                     // PATCH A: Pasang ulang listener partySignal agar tamu bisa merespons
@@ -8424,6 +8431,8 @@
         let _partySignalRef   = null;  // Listener partyStart dari host (sisi penerima)
         let _isPartyGuest         = false; // true saat melihat party lobby sebagai tamu (bukan host)
         let _partyHostUid         = null;  // UID host party (dipakai tamu)
+        let _partyHostName        = null;  // Nama host party (dipakai tamu untuk re-render lobi)
+        let _myPartySlot          = 2;     // Nomor slot tamu ini di lobi party (2 atau 3)
         let _guestPartyStatusRef  = null;  // Listener partyStatus host (update slot 3 real-time)
         let _partyRosterRef     = null;  // Host: listener roster untuk deteksi tamu keluar sukarela
         let _partyKickRef       = null;  // Guest: listener notifikasi dikick/dibubarkan
@@ -9005,6 +9014,8 @@
 
         function _showGuestPartyLobby(hostUid, hostName, mySlotNum) {
             mySlotNum = mySlotNum || 2;
+            _myPartySlot  = mySlotNum;   // Simpan agar bisa re-render saat kembali dari queue
+            _partyHostName = hostName;   // Simpan nama host untuk re-render
             const otherSlotNum = mySlotNum === 2 ? 3 : 2;
             // Slot 1: Tampilkan host dengan avatar + rank frame
             document.getElementById('pslot-1-name').textContent = escHtml(hostName);
@@ -9129,7 +9140,12 @@
                     if (_partyFirebaseId) _partyId = _partyFirebaseId;
                     _setPresenceStatus('inLobby');
                     // Kembalikan ke lobi party (party tidak dibubarkan)
-                    document.getElementById('party-lobby-overlay').style.display = 'flex';
+                    // Jika tamu: render ulang tampilan lobi guest dengan data yang tersimpan
+                    if (_isPartyGuest && _partyHostUid && _partyHostName) {
+                        _showGuestPartyLobby(_partyHostUid, _partyHostName, _myPartySlot);
+                    } else {
+                        document.getElementById('party-lobby-overlay').style.display = 'flex';
+                    }
                     const cancellerName = val?.cancelledBy || 'Salah satu pemain';
                     showToast(`ℹ️ ${cancellerName} membatalkan pencarian lawan.`, 'info');
                     // PATCH A: Pasang ulang listener partySignal agar tamu bisa merespons
@@ -9171,6 +9187,8 @@
         function _closeGuestPartyLobby() {
             _isPartyGuest = false;
             _partyHostUid = null;
+            _partyHostName = null;
+            _myPartySlot = 2;
             if (_guestPartyStatusRef) { _guestPartyStatusRef.off(); _guestPartyStatusRef = null; }
             if (_partyKickRef) { _partyKickRef.off(); _partyKickRef = null; }
             if (_partyGuestRosterRef) { _partyGuestRosterRef.off(); _partyGuestRosterRef = null; }
