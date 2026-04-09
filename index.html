@@ -6878,11 +6878,21 @@
             // _partyStatusRef/_partyStatus2Ref adalah listener respons invite yang kamu kirim — tidak perlu aktif saat di home
             if (_partyStatusRef)  { _partyStatusRef.off();  _partyStatusRef  = null; }
             if (_partyStatus2Ref) { _partyStatus2Ref.off(); _partyStatus2Ref = null; }
+            if (_partySignalRef)  { _partySignalRef.off();  _partySignalRef  = null; }
+            if (_partyKickRef)    { _partyKickRef.off();    _partyKickRef    = null; }
+            if (_partyGuestRosterRef) { _partyGuestRosterRef.off(); _partyGuestRosterRef = null; }
+            if (_guestPartyStatusRef) { _guestPartyStatusRef.off(); _guestPartyStatusRef = null; }
             _partyInviteData  = null;
             _partyFriendUid   = null; _partyFriendName  = null;
             _partyFriend2Uid  = null; _partyFriend2Name = null;
             _partyQueueSize   = null;
             _partyId          = null;
+            _partyFirebaseId  = null;
+            // Reset state tamu agar saat buka Ranked lagi tidak tampil sebagai guest lobi
+            _isPartyGuest     = false;
+            _partyHostUid     = null;
+            _partyHostName    = null;
+            _myPartySlot      = 2;
             _stopPartyPresenceListener();
             _stopCustomPresenceListener();
 
