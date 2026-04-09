@@ -5406,6 +5406,21 @@
                     partyId: _partyId || undefined,
                     partySize: _partyQueueSize || undefined
                 }));
+                // FIX race condition: kirim partySignal ke tamu SETELAH host terhubung ke server.
+                // Delay 600ms memberi waktu tamu memproses partyCancelSearch dan memasang ulang
+                // _startPartySignalListener sebelum sinyal baru ditulis — menghindari sinyal terlewat.
+                if (_pendingPartySignals) {
+                    const { uids, partyId, partySize } = _pendingPartySignals;
+                    _pendingPartySignals = null;
+                    setTimeout(async () => {
+                        for (const friendUid of uids) {
+                            const sigRef = db.ref(`users/${friendUid}/partySignal`);
+                            await sigRef.remove().catch(() => {});
+                            await sigRef.set({ partyId, partySize }).catch(() => {});
+                            sigRef.onDisconnect().remove();
+                        }
+                    }, 600);
+                }
             };
 
             ws.onmessage = (event) => {
@@ -8443,6 +8458,7 @@
         let _partyKickRef       = null;  // Guest: listener notifikasi dikick/dibubarkan
         let _partyGuestRosterRef= null;  // Guest: listener roster untuk update slot 3 saat tamu lain keluar
         let _guestSlot3Uid      = null;  // Guest: UID pemain di slot 3
+        let _pendingPartySignals = null; // FIX race condition: { uids, partyId, partySize } — dikirim di ws.onopen bukan langsung
         let _openPickerSlot   = null;  // Slot mana yang sedang memilih teman (2 atau 3)
         let _partyPresenceRef = null;  // Real-time listener presence untuk party picker
         let _partyPresenceCb  = null;
@@ -8844,7 +8860,7 @@
         function _resetSlot2() { _resetPartySlot(2); }
         function _resetSlot3() { _resetPartySlot(3); }
 
-        async function startMatchmakingFromParty() {
+        function startMatchmakingFromParty() {
             // Hitung jumlah teman yang sudah menerima (slot joined)
             const slot2Joined = document.getElementById('pslot-2')?.classList.contains('joined');
             const slot3Joined = document.getElementById('pslot-3')?.classList.contains('joined');
@@ -8857,14 +8873,12 @@
                 slot2Joined ? _partyFriendUid : null,
                 slot3Joined ? _partyFriend2Uid : null
             ].filter(Boolean);
-            for (const friendUid of acceptedUids) {
-                if (!friendUid) continue;
-                const sigRef = db.ref(`users/${friendUid}/partySignal`);
-                // PATCH C: Hapus sinyal lama dulu sebelum tulis baru, cegah tamu baca sinyal stale
-                await sigRef.remove().catch(() => {});
-                await sigRef.set({ partyId: _partyId, partySize }).catch(() => {});
-                sigRef.onDisconnect().remove();
-            }
+            // FIX race condition: simpan sinyal dulu, baru kirim di ws.onopen setelah host connect.
+            // Ini mencegah tamu menerima partySignal sebelum sempat pasang ulang listener
+            // (yang terjadi jika host langsung mulai ulang setelah cancel).
+            _pendingPartySignals = acceptedUids.length > 0
+                ? { uids: acceptedUids, partyId: _partyId, partySize }
+                : null;
 
             // Pasang listener partyCancelSearch untuk HOST — agar host ikut berhenti
             // jika salah satu tamu membatalkan pencarian lawan
