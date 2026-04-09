@@ -8631,13 +8631,16 @@
                 // Hapus seluruh partyStatus agar tidak terbaca di sesi berikutnya
                 db.ref(`users/${currentUser.uid}/partyStatus`).remove().catch(() => {});
             }
-            _partyFriendUid = null; _partyFriendName = null;
-            _partyFriend2Uid = null; _partyFriend2Name = null;
             _openPickerSlot = null;
-            // keepPartyId=true digunakan oleh startMatchmakingFromParty agar partyId tidak direset
+            // keepPartyId=true digunakan oleh startMatchmakingFromParty:
+            // - partyId tidak direset (agar JOIN_MATCHMAKING pakai ID yang benar)
+            // - _partyFriendUid/_partyFriend2Uid tidak direset (agar saat kembali ke lobi setelah
+            //   cancel, host tekan Mulai lagi masih bisa kirim partySignal ke tamu yang benar)
             if (!keepPartyId) {
+                _partyFriendUid = null; _partyFriendName = null;
+                _partyFriend2Uid = null; _partyFriend2Name = null;
                 _partyId = null;
-                _partyFirebaseId = null; // PATCH B: reset agar siklus party berikutnya mulai bersih
+                _partyFirebaseId = null;
             }
         }
 
