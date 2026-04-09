@@ -5477,32 +5477,24 @@
             soundEffects.bgMusic.play().catch(() => {});
 
             // Jika sedang dalam party → kembalikan ke lobi party (party tidak dibubarkan)
-            if ((_partyId || _partyFirebaseId) && currentUser) {
+            if ((_partyId || _partyFirebaseId || _isPartyGuest) && currentUser) {
                 _partyQueueSize = null;
-                // Matikan listener partyCancelSearch host (agar tidak re-trigger setelah cancel sendiri)
-                if (!_isPartyGuest) {
-                    db.ref(`users/${currentUser.uid}/partyCancelSearch`).off();
-                    db.ref(`users/${currentUser.uid}/partyCancelSearch`).remove().catch(() => {});
-                }
-                // FIX: Matikan listener partyCancelSearch tamu juga (agar tidak re-trigger
-                // karena node ini mungkin masih ada dari siklus sebelumnya)
-                if (_isPartyGuest) {
-                    const _selfCancelRef = db.ref(`users/${currentUser.uid}/partyCancelSearch`);
-                    _selfCancelRef.off();
-                    _selfCancelRef.remove().catch(() => {});
-                }
+                // Matikan listener partyCancelSearch agar tidak re-trigger setelah cancel sendiri
+                const _selfCsRef = db.ref(`users/${currentUser.uid}/partyCancelSearch`);
+                _selfCsRef.off();
+                _selfCsRef.remove().catch(() => {});
                 // Kembalikan _partyId ke Firebase ID asli agar lobi party bisa berfungsi
                 if (_partyFirebaseId) _partyId = _partyFirebaseId;
                 _setPresenceStatus('inLobby');
-                // FIX: Untuk tamu, panggil _showGuestPartyLobby agar UI lobi ter-render ulang
-                // dengan benar (bukan sekadar menampilkan overlay kosong)
+                // FIX: Tamu punya state lengkap (_partyHostUid, _partyHostName, _isPartyGuest)
+                // karena kita tidak reset saat masuk queue — render ulang lobi tamu dengan benar
                 if (_isPartyGuest && _partyHostUid && _partyHostName) {
                     _showGuestPartyLobby(_partyHostUid, _partyHostName, _myPartySlot);
                 } else {
                     document.getElementById('party-lobby-overlay').style.display = 'flex';
                 }
-                // PATCH A: Jika pembatal adalah tamu, pasang ulang listener partySignal
-                // agar bisa merespons jika host menekan Mulai lagi
+                // PATCH A: Pasang ulang listener partySignal agar tamu bisa merespons
+                // jika host menekan Mulai lagi
                 if (_isPartyGuest && _partyFirebaseId) {
                     _startPartySignalListener(_partyFirebaseId);
                 }
@@ -8541,12 +8533,14 @@
             _setPresenceStatus('inLobby');
         }
 
-        function closePartyLobby(keepPartyId = false) {
+        function closePartyLobby(keepPartyId = false, enteringQueue = false) {
             // Jika dalam mode tamu, gunakan alur batal khusus tamu
             if (_isPartyGuest) {
                 if (_partySignalRef) { _partySignalRef.off(); _partySignalRef = null; }
-                // Hapus diri dari roster & bersihkan partyStatus agar host tidak baca data accept lama
-                if (_partyId && currentUser) {
+                // FIX: Jangan hapus partyStatus saat masuk antrian (enteringQueue=true)
+                // karena data ini dibutuhkan untuk re-render lobi jika tamu cancel dari queue.
+                // Hanya hapus saat tamu benar-benar keluar dari party (bukan sedang queuing).
+                if (!enteringQueue && _partyId && currentUser) {
                     db.ref(`partyRoster/${_partyId}/${currentUser.uid}`).remove().catch(() => {});
                     if (_partyHostUid) {
                         db.ref(`users/${_partyHostUid}/partyStatus/${_partyId}/${currentUser.uid}`).remove().catch(() => {});
@@ -9016,8 +9010,17 @@
                 // Host sudah mulai — hapus sinyal lalu masuk antrian
                 db.ref(`users/${currentUser.uid}/partySignal`).remove().catch(() => {});
                 if (_partySignalRef) { _partySignalRef.off(); _partySignalRef = null; }
-                // Tutup guest party lobby lalu masuk antrian
-                if (_isPartyGuest) _closeGuestPartyLobby();
+                // FIX: Jangan panggil _closeGuestPartyLobby() di sini karena akan mereset
+                // _isPartyGuest, _partyHostUid, _partyHostName, _myPartySlot — semua state
+                // yang dibutuhkan untuk re-render lobi saat tamu cancel dari queue.
+                // Cukup sembunyikan overlay saja.
+                if (_isPartyGuest) {
+                    document.getElementById('party-lobby-overlay').style.display = 'none';
+                    // Matikan listeners yang tidak diperlukan selama queue
+                    if (_guestPartyStatusRef) { _guestPartyStatusRef.off(); _guestPartyStatusRef = null; }
+                    if (_partyKickRef) { _partyKickRef.off(); _partyKickRef = null; }
+                    if (_partyGuestRosterRef) { _partyGuestRosterRef.off(); _partyGuestRosterRef = null; }
+                }
                 _partyFirebaseId = sig.partyId; // Pertahankan Firebase ID asli sebelum diganti sharedPartyId
                 _partyId = sig.partyId;
                 _partyQueueSize = sig.partySize || 2;
@@ -9134,13 +9137,10 @@
                     if (!snap.exists()) return;
                     const val = snap.val();
                     cancelSearchRef.remove().catch(() => {});
-                    // FIX: Hapus guard floatBar === 'none' — sinyal cancel harus selalu diproses
-                    // bahkan jika float bar sudah tersembunyi akibat race condition timing.
-                    // Jika tidak sedang mencari (ws null) dan bukan tamu, abaikan saja.
+                    // FIX: Hapus guard floatBar — sinyal harus tetap diproses meski ada race condition timing
                     const floatBar = document.getElementById('matchmaking-float-bar');
                     const isSearching = floatBar && floatBar.style.display !== 'none';
                     if (isSearching) {
-                        // Hentikan pencarian lawan
                         hideMatchmakingFloatBar();
                         stopMatchmakingCountdown();
                         if (ws) {
@@ -9153,8 +9153,7 @@
                         soundEffects.bgMusic2.currentTime = 0;
                         soundEffects.bgMusic.play().catch(() => {});
                     } else if (!_isPartyGuest) {
-                        // Host tidak sedang mencari (float bar sudah hilang), abaikan
-                        return;
+                        return; // Host tidak sedang mencari, abaikan
                     }
                     _partyQueueSize = null;
                     // Kembalikan _partyId ke Firebase ID asli agar lobi party berfungsi
