@@ -102,7 +102,8 @@
         body:has(.game-container.active) {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
             background-image: none !important;
-            overflow-y: auto;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
         }
         /* ============================================ */
         /* MATCHMAKING SCREEN */
@@ -121,6 +122,7 @@
             background: url('gambar/background/bg1.png') no-repeat center center;
             background-size: 100% 100%;
             z-index: 10000;
+            overflow-y: auto;
         }
         #matchmaking-screen.active { display: flex; }
         #matchmaking-screen.hidden { display: none; }
@@ -5340,6 +5342,12 @@
         // =============================================
         // MATCHMAKING
         // =============================================
+        // Helper: restore overflow body sesuai kondisi (game aktif = auto, tidak = hidden)
+        function restoreBodyOverflow() {
+            const gameActive = document.getElementById('game-container')?.classList.contains('active');
+            document.body.style.overflow = gameActive ? 'auto' : '';
+        }
+
         // Tutup semua halaman/overlay yang mungkin sedang terbuka
         function closeAllScreens() {
             const ids = [
@@ -5432,6 +5440,7 @@
                 ws.close();
                 ws = null;
             }
+            DOM.matchmakingScreen.classList.add('active');
             DOM.matchmakingScreen.querySelector('#matchmaking-idle').style.display = 'flex';
             DOM.matchmakingScreen.querySelector('#matchmaking-waiting').style.display = 'none';
             DOM.matchmakingScreen.querySelector('#match-starting').style.display = 'none';
@@ -7203,7 +7212,7 @@
 
         function hideEncyclopedia() {
             document.getElementById('encyclopedia-screen').style.display = 'none';
-            document.body.style.overflow = '';
+            restoreBodyOverflow();
         }
 
         // =============================================
@@ -7218,7 +7227,7 @@
 
         function hideProfileScreen() {
             document.getElementById('profile-screen').style.display = 'none';
-            document.body.style.overflow = '';
+            restoreBodyOverflow();
             detachProfileListeners(); // lepas listener saat tutup
         }
 
@@ -7230,7 +7239,7 @@
 
         function hideTemanScreen() {
             document.getElementById('teman-screen').style.display = 'none';
-            document.body.style.overflow = '';
+            restoreBodyOverflow();
         }
 
         function switchProfileTab(tab) {
@@ -7495,7 +7504,7 @@
 
         function hideSettingsScreen() {
             document.getElementById('settings-screen').style.display = 'none';
-            document.body.style.overflow = '';
+            restoreBodyOverflow();
         }
 
         function showPengembangScreen() {
@@ -7505,7 +7514,7 @@
 
         function hidePengembangScreen() {
             document.getElementById('pengembang-screen').style.display = 'none';
-            document.body.style.overflow = '';
+            restoreBodyOverflow();
         }
 
         function applyVolumeBgMusic1(val) {
@@ -7820,7 +7829,7 @@
 
         function closeVisitProfile() {
             document.getElementById('visit-profile-screen').classList.remove('active');
-            document.body.style.overflow = '';
+            restoreBodyOverflow();
             detachVisitListeners();
             _visitUid = null;
         }
@@ -9948,6 +9957,11 @@ function showMatchmakingFloatBar() {
     const bar = document.getElementById('matchmaking-float-bar');
     if (!bar) return;
     bar.style.display = 'flex';
+    // Disable tombol Ranked dan Kostum saat mencari lawan
+    const btnRanked = document.querySelector('.btn-start');
+    const btnKostum = document.querySelector('.btn-kostum-style');
+    if (btnRanked) { btnRanked.disabled = true; btnRanked.style.opacity = '0.4'; btnRanked.style.cursor = 'not-allowed'; btnRanked.title = 'Batalkan proses mencari lawan terlebih dahulu'; }
+    if (btnKostum) { btnKostum.disabled = true; btnKostum.style.opacity = '0.4'; btnKostum.style.cursor = 'not-allowed'; btnKostum.title = 'Batalkan proses mencari lawan terlebih dahulu'; }
     let totalSecs = 0;
     clearInterval(_mfTimerInterval);
     _mfTimerInterval = setInterval(() => {
@@ -9966,5 +9980,10 @@ function hideMatchmakingFloatBar() {
     _mfTimerInterval = null;
     const el = document.getElementById('mf-timer');
     if (el) el.textContent = '00:00';
+    // Re-enable tombol Ranked dan Kostum
+    const btnRanked = document.querySelector('.btn-start');
+    const btnKostum = document.querySelector('.btn-kostum-style');
+    if (btnRanked) { btnRanked.disabled = false; btnRanked.style.opacity = ''; btnRanked.style.cursor = ''; btnRanked.title = ''; }
+    if (btnKostum) { btnKostum.disabled = false; btnKostum.style.opacity = ''; btnKostum.style.cursor = ''; btnKostum.title = ''; }
 }
 </script>
