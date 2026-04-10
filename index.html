@@ -5687,6 +5687,7 @@
                         _resetCustomRoomOverlay();
                         document.getElementById('custom-room-overlay').style.display = 'none';
                         _stopCustomPresenceListener();
+            _stopCustomDeclineListener();
                         document.getElementById('custom-friend-picker').style.display = 'none';
                         DOM.matchmakingScreen.classList.add('active');
                         const _idle = DOM.matchmakingScreen.querySelector('#matchmaking-idle');
@@ -5726,6 +5727,7 @@
                         _resetCustomRoomOverlay();
                         document.getElementById('custom-room-overlay').style.display = 'none';
                         _stopCustomPresenceListener();
+            _stopCustomDeclineListener();
                         document.getElementById('custom-friend-picker').style.display = 'none';
                         _setPresenceStatus('online');
                         _startCustomRoomInviteListener();
@@ -5747,6 +5749,7 @@
                         _resetCustomRoomOverlay();
                         document.getElementById('custom-room-overlay').style.display = 'none';
                         _stopCustomPresenceListener();
+            _stopCustomDeclineListener();
                         document.getElementById('custom-friend-picker').style.display = 'none';
                         _setPresenceStatus('online');
                         _startCustomRoomInviteListener();
@@ -5781,6 +5784,8 @@
                     // Pastikan tombol Mulai terlihat (reset dari sesi sebelumnya)
                     { const _bs = document.getElementById('btn-custom-start');
                       if (_bs) { _bs.style.display = ''; _bs.disabled = true; _bs.textContent = '▶ Mulai'; } }
+                    // Mulai listener decline agar host tahu saat undangan ditolak
+                    _startCustomDeclineListener();
                     // Show lobby
                     document.getElementById('custom-room-overlay').style.display = 'flex';
                     _renderCustomRoomLobby();
@@ -5809,6 +5814,7 @@
                     _resetCustomRoomOverlay();
                     document.getElementById('custom-room-overlay').style.display = 'none';
                     _stopCustomPresenceListener();
+            _stopCustomDeclineListener();
                     document.getElementById('custom-friend-picker').style.display = 'none';
                     // Sembunyikan match-starting (provinces preview) jika ditampilkan dari custom room
                     const _msEl = document.getElementById('match-starting');
@@ -5998,6 +6004,7 @@
                         _customPickerSlot = null;
                         document.getElementById('custom-room-overlay').style.display = 'none';
                         _stopCustomPresenceListener();
+            _stopCustomDeclineListener();
                         document.getElementById('custom-friend-picker').style.display = 'none';
                     }
                     break;
@@ -7006,6 +7013,7 @@
             const _crOverlay = document.getElementById("custom-room-overlay");
             if (_crOverlay) _crOverlay.style.display = "none";
             _stopCustomPresenceListener();
+            _stopCustomDeclineListener();
             const _cfPicker = document.getElementById("custom-friend-picker");
             if (_cfPicker) _cfPicker.style.display = "none";
             const _clBubble = document.getElementById("custom-lobby-bubble");
@@ -7043,6 +7051,7 @@
             _myPartySlot      = 2;
             _stopPartyPresenceListener();
             _stopCustomPresenceListener();
+            _stopCustomDeclineListener();
 
             // [FIX GUEST] Bersihkan Firebase party nodes agar tidak tersisa sebagai state stale
             // saat player kembali ke home setelah pertandingan selesai/menyerah.
@@ -9612,12 +9621,48 @@
         let _customRoomSlots      = {};     // filled slots {slotPos: {name, uid, isBot?, level?}} — key = nomor slot asli (1-4)
         let _customInviteData     = null;   // pending invite data
         let _customInviteRef      = null;   // Firebase listener ref
+        let _customDeclineRef     = null;   // Firebase listener: host mendeteksi penolakan undangan
         let _customPickerSlot     = null;   // which slot index is being filled
         let _pendingBotAdd        = false;  // flag: sedang menunggu konfirmasi server untuk ADD_BOT_SLOT
         let _pendingCustomJoin    = false;  // menunggu konfirmasi server setelah JOIN_CUSTOM_ROOM
         let _isCustomRoomCreator  = false;  // true = user yang membuat room (bisa tambah/hapus bot)
         let _isCustomRoom         = false;  // in-game flag
         let _isSpectator          = false;  // in-game spectator flag
+
+        // Listener untuk HOST: mendeteksi saat undangan yang dikirim ditolak oleh penerima
+        function _startCustomDeclineListener() {
+            if (!currentUser || !_isCustomRoomCreator) return;
+            if (_customDeclineRef) { _customDeclineRef.off(); _customDeclineRef = null; }
+            _customDeclineRef = db.ref(`users/${currentUser.uid}/customRoomDecline`);
+            _customDeclineRef.on('child_added', snap => {
+                if (!snap.exists()) return;
+                const data = snap.val();
+                // Hapus node agar tidak terpicu ulang
+                snap.ref.remove().catch(() => {});
+                // Abaikan jika sudah lebih dari 30 detik (stale)
+                if (!data.ts || Date.now() - data.ts > 30000) return;
+                // Tidak perlu cek _customRoomId karena listener sudah dimatikan saat room tutup
+                const declinedName = data.declinedBy || 'Pemain';
+                const declinedUid  = data.declinedByUid;
+                showToast(`❌ ${declinedName} menolak undanganmu.`, 'warning');
+                // Hapus slot pending yang cocok berdasarkan UID
+                Object.keys(_customRoomSlots).forEach(slot => {
+                    const s = _customRoomSlots[slot];
+                    if (s && s.pending && s.uid === declinedUid) {
+                        delete _customRoomSlots[slot];
+                    }
+                });
+                _renderCustomRoomLobby();
+            });
+        }
+
+        function _stopCustomDeclineListener() {
+            if (_customDeclineRef) { _customDeclineRef.off(); _customDeclineRef = null; }
+            // Bersihkan semua node decline yang tertinggal
+            if (currentUser) {
+                db.ref(`users/${currentUser.uid}/customRoomDecline`).remove().catch(() => {});
+            }
+        }
 
         function showKostumPicker() {
             if (!currentUser) { showToast('❌ Login dulu untuk fitur ini.', 'error'); return; }
@@ -9708,6 +9753,7 @@
                         _resetCustomRoomOverlay();
                         document.getElementById('custom-room-overlay').style.display = 'none';
                         _stopCustomPresenceListener();
+            _stopCustomDeclineListener();
                         document.getElementById('custom-friend-picker').style.display = 'none';
                         _setPresenceStatus('online');
                         _startCustomRoomInviteListener();
@@ -9722,29 +9768,43 @@
             const myName = currentNickname || lsGet(LS.NICKNAME) || 'Kamu';
             const isSpect = _customRoomRole === 'penonton';
             const canManageBots = _isCustomRoomCreator;
+            const myUid = currentUser ? currentUser.uid : null;
 
             document.getElementById('custom-room-title').textContent = isSpect ? '📺 Custom Room – Penonton' : '🎮 Custom Room – Pemain';
             document.getElementById('custom-room-subtitle').textContent = isSpect
                 ? 'Kamu hanya menonton. Undang 4 pemain.'
-                : 'Slot 1 = kamu. Undang teman atau isi slot dengan bot.';
+                : _isCustomRoomCreator
+                    ? 'Slot 1 = kamu. Undang teman atau isi slot dengan bot.'
+                    : 'Kamu sudah bergabung. Menunggu host memulai...';
             document.getElementById('custom-room-id-badge').textContent = `Kode: ${_customRoomId || '...'}`;
 
             const slotsDiv = document.getElementById('custom-slots');
             slotsDiv.innerHTML = '';
 
-            // _customRoomSlots adalah object {slotPos: entry} dengan key = nomor slot asli (1-4)
+            // Untuk HOST: slot 1 dirender manual sebagai "Kamu", sisanya dari _customRoomSlots
+            // Untuk NON-HOST: semua slot dari _customRoomSlots (termasuk diri sendiri yang ada di salah satu slot)
             const occupiedCount = Object.values(_customRoomSlots).filter(Boolean).length;
-            const totalOccupied = (isSpect ? 0 : 1) + occupiedCount;
+            const totalOccupied = _isCustomRoomCreator ? (isSpect ? 0 : 1) + occupiedCount : occupiedCount;
 
             for (let slotPos = 1; slotPos <= 4; slotPos++) {
-                // Slot 1 untuk pemain = selalu "Kamu", tidak ada di _customRoomSlots
-                const entry = (!isSpect && slotPos === 1) ? null : (_customRoomSlots[slotPos] || null);
+                // HOST: slot 1 selalu "Kamu" (tidak ada di _customRoomSlots)
+                // NON-HOST: ambil semua dari _customRoomSlots
+                const entry = (!isSpect && _isCustomRoomCreator && slotPos === 1)
+                    ? null
+                    : (_customRoomSlots[slotPos] || null);
 
                 const slot = document.createElement('div');
                 slot.className = 'custom-slot';
 
-                if (!isSpect && slotPos === 1) {
-                    // Slot diri sendiri (hanya pemain)
+                if (!isSpect && _isCustomRoomCreator && slotPos === 1) {
+                    // Slot diri sendiri — hanya untuk host/creator
+                    slot.classList.add('self');
+                    slot.innerHTML = `
+                        ${_getAvatarWithFrameHtml(36)}
+                        <div class="custom-slot-name">${myName}</div>
+                        <div class="custom-slot-tag">Kamu</div>`;
+                } else if (entry && entry.uid === myUid && !isSpect) {
+                    // Non-host melihat dirinya sendiri di salah satu slot — render sebagai "Kamu"
                     slot.classList.add('self');
                     slot.innerHTML = `
                         ${_getAvatarWithFrameHtml(36)}
@@ -9798,10 +9858,14 @@
             }
 
             // Update tombol Mulai — hanya hitung slot confirmed (bukan pending invite)
-            const confirmedCount = (isSpect ? 0 : 1) + Object.values(_customRoomSlots).filter(s => s && !s.pending).length;
+            // Host: slot 1 manual (dirinya) + semua slot confirmed dari _customRoomSlots
+            // Non-host: semua slot dari _customRoomSlots (termasuk dirinya sendiri)
+            const confirmedCount = _isCustomRoomCreator
+                ? (isSpect ? 0 : 1) + Object.values(_customRoomSlots).filter(s => s && !s.pending).length
+                : Object.values(_customRoomSlots).filter(s => s && !s.pending).length;
             const _btnStart = document.getElementById('btn-custom-start');
             if (!_isCustomRoomCreator) {
-                // Non-host: sembunyikan tombol Mulai, tampilkan teks menunggu host
+                // Non-host: sembunyikan tombol Mulai
                 _btnStart.style.display = 'none';
             } else {
                 // Host/creator: tampilkan dan atur status tombol Mulai
@@ -9934,6 +9998,7 @@
                 _renderCustomRoomLobby();
             }
             _stopCustomPresenceListener();
+            _stopCustomDeclineListener();
             document.getElementById('custom-friend-picker').style.display = 'none';
             addBotToRoom(level); // addBotToRoom baca _customPickerSlot sebelum di-null
             _customPickerSlot = null;
@@ -9942,6 +10007,7 @@
         async function inviteToCustomRoom(uid, name, slotPos) {
             if (!currentUser || !_customRoomId) return;
             _stopCustomPresenceListener();
+            _stopCustomDeclineListener();
             document.getElementById('custom-friend-picker').style.display = 'none';
             // Send Firebase invite
             const myName = currentNickname || lsGet(LS.NICKNAME) || 'Player';
@@ -9971,12 +10037,14 @@
                     // Pemain sudah join → kick via WebSocket; UI diupdate saat CUSTOM_ROOM_UPDATE tiba
                     ws.send(JSON.stringify({ type: 'KICK_FROM_ROOM', roomId: _customRoomId, targetUid: uid }));
                     _stopCustomPresenceListener();
+            _stopCustomDeclineListener();
                     document.getElementById('custom-friend-picker').style.display = 'none';
                     return;
                 }
                 delete _customRoomSlots[slotPos];
             }
             _stopCustomPresenceListener();
+            _stopCustomDeclineListener();
             document.getElementById('custom-friend-picker').style.display = 'none';
             _renderCustomRoomLobby();
         }
@@ -10021,6 +10089,7 @@
             _resetCustomRoomOverlay();
             document.getElementById('custom-room-overlay').style.display = 'none';
             _stopCustomPresenceListener();
+            _stopCustomDeclineListener();
             document.getElementById('custom-friend-picker').style.display = 'none';
             _startCustomRoomInviteListener(); // restart listener agar undangan berikutnya tetap muncul
         }
@@ -10204,8 +10273,21 @@
 
         async function declineCustomRoomInvite() {
             if (!_customInviteData || !currentUser) return;
+            const inv = _customInviteData;
             document.getElementById('custom-room-invite-popup').style.display = 'none';
             _customInviteData = null;
+            _pendingCustomInviteBeforePlay = null;
+
+            // Tulis status "declined" ke node khusus agar host bisa mendeteksi penolakan
+            // Host mendengarkan users/{hostUid}/customRoomDecline/{myUid}
+            if (inv.fromUid) {
+                await db.ref(`users/${inv.fromUid}/customRoomDecline/${currentUser.uid}`).set({
+                    declinedBy: currentNickname || lsGet(LS.NICKNAME) || 'Player',
+                    declinedByUid: currentUser.uid,
+                    ts: Date.now()
+                }).catch(() => {});
+            }
+            // Hapus undangan dari Firebase
             await db.ref(`users/${currentUser.uid}/customRoomInvite`).remove().catch(() => {});
         }
 
