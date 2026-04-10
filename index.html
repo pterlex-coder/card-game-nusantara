@@ -5368,7 +5368,7 @@
                     document.getElementById('custom-lobby-bubble').style.display = 'flex';
                 }
 
-                // Flush undangan yang tertahan saat user masih di pre-loading screen.
+                // Flush undangan party yang tertahan saat user masih di pre-loading screen.
                 // Delay 1 detik agar UI matchmaking selesai render sebelum popup muncul.
                 if (_pendingInviteBeforePlay) {
                     const inv = _pendingInviteBeforePlay;
@@ -5382,6 +5382,20 @@
                             `${inv.fromName || 'Seorang teman'} mengajakmu main bareng!`;
                         document.getElementById('party-invite-popup').style.display = 'flex';
                     }, 1000);
+                }
+
+                // Flush undangan custom room yang tertahan saat user masih di pre-loading screen.
+                // Delay 1.5 detik (sedikit lebih lama dari party) agar tidak bentrok tampilannya.
+                if (_pendingCustomInviteBeforePlay) {
+                    const cinv = _pendingCustomInviteBeforePlay;
+                    _pendingCustomInviteBeforePlay = null;
+                    setTimeout(() => {
+                        if (!cinv || Date.now() - cinv.ts > 120000) return;
+                        if (!_customInviteData) return;
+                        document.getElementById('custom-invite-msg').textContent =
+                            `${cinv.fromName || 'Seorang teman'} mengundangmu ke custom room!`;
+                        document.getElementById('custom-room-invite-popup').style.display = 'flex';
+                    }, 1500);
                 }
             }, 500);
         }
@@ -5740,8 +5754,33 @@
                     }
                     break;
 
+                case 'INVITE_DECLINED': {
+                    // Host mendapat notifikasi bahwa pemain yang diundang menolak
+                    const declinedName = data.toName || 'Pemain';
+                    showToast(`❌ ${declinedName} menolak undanganmu.`, 'warning');
+                    // Hapus slot pending yang cocok agar tidak stuck "menunggu..."
+                    Object.keys(_customRoomSlots).forEach(slot => {
+                        if (_customRoomSlots[slot]?.pending &&
+                            _customRoomSlots[slot]?.name === declinedName) {
+                            delete _customRoomSlots[slot];
+                        }
+                    });
+                    // Jika tidak ada yang cocok berdasarkan nama (bisa berbeda), hapus semua pending
+                    const stillHasPending = Object.values(_customRoomSlots).some(s => s?.pending);
+                    if (stillHasPending) {
+                        Object.keys(_customRoomSlots).forEach(slot => {
+                            if (_customRoomSlots[slot]?.pending) delete _customRoomSlots[slot];
+                        });
+                    }
+                    _renderCustomRoomLobby();
+                    break;
+                }
+
                 case 'CUSTOM_ROOM_CREATED':
                     _customRoomId = data.roomId;
+                    // Pastikan tombol Mulai terlihat (reset dari sesi sebelumnya)
+                    { const _bs = document.getElementById('btn-custom-start');
+                      if (_bs) { _bs.style.display = ''; _bs.disabled = true; _bs.textContent = '▶ Mulai'; } }
                     // Show lobby
                     document.getElementById('custom-room-overlay').style.display = 'flex';
                     _renderCustomRoomLobby();
@@ -6958,6 +6997,9 @@
             _customRoomSlots = {};
             _customPickerSlot = null;
             _pendingCustomJoin = false;
+            _isCustomRoomCreator = false;  // [FIX] reset agar sesi berikutnya tidak salah identifikasi host
+            _pendingBotAdd = false;        // [FIX] reset agar tombol bot tidak stuck
+            _pendingCustomInviteBeforePlay = null; // [FIX] bersihkan undangan yang tertahan jika ada
             // [FIX] Safety net: pastikan custom room overlay & picker tertutup
             // (seharusnya sudah ditutup oleh GAME_STARTED, tapi jaga-jaga edge case)
             _resetCustomRoomOverlay();
@@ -8662,9 +8704,10 @@
         let _pendingPartySignals = null; // FIX race condition: { uids, partyId, partySize } — dikirim di ws.onopen bukan langsung
         // FIX: sembunyikan popup undangan sampai user menekan PLAY, lalu flush setelah transisi selesai
         let _hasEnteredMain          = false; // true setelah goToMatchmaking() selesai transisi
-        let _pendingInviteBeforePlay = null;  // simpan undangan yang masuk sebelum PLAY ditekan
-        let _pendingPartyBubble      = false; // true jika party bubble perlu muncul setelah PLAY
-        let _pendingCustomBubble     = false; // true jika custom room bubble perlu muncul setelah PLAY
+        let _pendingInviteBeforePlay       = null;  // simpan undangan party yang masuk sebelum PLAY ditekan
+        let _pendingCustomInviteBeforePlay = null;  // simpan undangan custom room yang masuk sebelum PLAY ditekan
+        let _pendingPartyBubble            = false; // true jika party bubble perlu muncul setelah PLAY
+        let _pendingCustomBubble           = false; // true jika custom room bubble perlu muncul setelah PLAY
         let _openPickerSlot   = null;  // Slot mana yang sedang memilih teman (2 atau 3)
         let _partyPresenceRef = null;  // Real-time listener presence untuk party picker
         let _partyPresenceCb  = null;
@@ -9757,8 +9800,15 @@
             // Update tombol Mulai — hanya hitung slot confirmed (bukan pending invite)
             const confirmedCount = (isSpect ? 0 : 1) + Object.values(_customRoomSlots).filter(s => s && !s.pending).length;
             const _btnStart = document.getElementById('btn-custom-start');
-            _btnStart.disabled = confirmedCount < 2;
-            _btnStart.textContent = '▶ Mulai';
+            if (!_isCustomRoomCreator) {
+                // Non-host: sembunyikan tombol Mulai, tampilkan teks menunggu host
+                _btnStart.style.display = 'none';
+            } else {
+                // Host/creator: tampilkan dan atur status tombol Mulai
+                _btnStart.style.display = '';
+                _btnStart.disabled = confirmedCount < 2;
+                _btnStart.textContent = '▶ Mulai';
+            }
         }
 
         async function openCustomFriendPicker(slotPos) {
@@ -9998,8 +10048,9 @@
             const newSlots = {};
             data.slots.forEach(s => {
                 if (s.slot < 1 || s.slot > 4) return;
-                // Skip slot host sendiri (slot 1 untuk pemain) — ditangani langsung di render
-                if (!isSpect && s.uid === myUid) return;
+                // Skip slot host sendiri (slot 1 untuk pemain) — hanya jika kita adalah creator/host
+                // Non-host (pemain yang diundang) perlu melihat dirinya sendiri di slot
+                if (!isSpect && s.uid === myUid && _isCustomRoomCreator) return;
                 newSlots[s.slot] = s.isBot
                     ? { name: s.name, uid: null, isBot: true, level: s.level }
                     : { name: s.name, uid: s.uid };
@@ -10046,6 +10097,7 @@
                 if (!snap.exists()) {
                     document.getElementById('custom-room-invite-popup').style.display = 'none';
                     _customInviteData = null; // Hapus data lama agar klik "Terima" terlambat tidak diproses
+                    _pendingCustomInviteBeforePlay = null; // Bersihkan juga undangan yang masih tertahan
                     return;
                 }
                 const inv = snap.val();
@@ -10060,6 +10112,14 @@
                     return;
                 }
                 _customInviteData = inv;
+
+                // Jika user belum menekan PLAY (masih di pre-loading screen), tahan undangan dulu.
+                // Undangan akan ditampilkan otomatis setelah goToMatchmaking() selesai transisi.
+                if (!_hasEnteredMain) {
+                    _pendingCustomInviteBeforePlay = inv;
+                    return;
+                }
+
                 document.getElementById('custom-invite-msg').textContent =
                     `${inv.fromName || 'Seorang teman'} mengundangmu ke custom room!`;
                 document.getElementById('custom-room-invite-popup').style.display = 'flex';
