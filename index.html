@@ -4340,7 +4340,7 @@
             _customInviteData = null;
             _customRoomId = null;
             _customRoomRole = null;
-            _customRoomSlots = [];
+            _customRoomSlots = {};
             _customPickerSlot = null;
             _pendingCustomJoin = false;
 
@@ -4728,8 +4728,8 @@
             }
             // Cleanup custom room invite yang masih pending saat halaman ditutup/refresh
             if (currentUser) {
-                if (_customRoomSlots && _customRoomSlots.length > 0) {
-                    _customRoomSlots.forEach(s => {
+                if (_customRoomSlots && Object.keys(_customRoomSlots).length > 0) {
+                    Object.values(_customRoomSlots).forEach(s => {
                         if (s?.pending && s.uid) db.ref(`users/${s.uid}/customRoomInvite`).remove();
                     });
                 }
@@ -5699,15 +5699,16 @@
                     if (_customRoomId) {
                         // Beritahu server agar currentCustomRoomId di socket guest ikut di-clear
                         try { ws.send(JSON.stringify({ type: 'LEAVE_CUSTOM_ROOM', userUid: currentUser ? currentUser.uid : '' })); } catch(_) {}
-                        _customRoomSlots.forEach(s => {
+                        Object.values(_customRoomSlots).forEach(s => {
                             if (s?.pending && s.uid) db.ref(`users/${s.uid}/customRoomInvite`).remove().catch(() => {});
                         });
                         _customRoomId = null;
                         _customRoomRole = null;
-                        _customRoomSlots = [];
+                        _customRoomSlots = {};
                         _customPickerSlot = null;
                         _pendingCustomJoin = false;
                         _isCustomRoomCreator = false;
+                        _pendingBotAdd = false;
                         _resetCustomRoomOverlay();
                         document.getElementById('custom-room-overlay').style.display = 'none';
                         _stopCustomPresenceListener();
@@ -5724,10 +5725,11 @@
                         try { ws.send(JSON.stringify({ type: 'LEAVE_CUSTOM_ROOM', userUid: currentUser ? currentUser.uid : '' })); } catch(_) {}
                         _customRoomId = null;
                         _customRoomRole = null;
-                        _customRoomSlots = [];
+                        _customRoomSlots = {};
                         _customPickerSlot = null;
                         _pendingCustomJoin = false;
                         _isCustomRoomCreator = false;
+                        _pendingBotAdd = false;
                         _resetCustomRoomOverlay();
                         document.getElementById('custom-room-overlay').style.display = 'none';
                         _stopCustomPresenceListener();
@@ -5931,6 +5933,17 @@
 
                 case 'ERROR':
                     showToast('❌ ' + data.message, 'error');
+                    // Reset flag pending bot jika error dari ADD_BOT_SLOT
+                    if (_pendingBotAdd) {
+                        _pendingBotAdd = false;
+                        // Hapus optimistic slot yang tadi ditambahkan (pending: true, isBot: true)
+                        Object.keys(_customRoomSlots).forEach(slot => {
+                            if (_customRoomSlots[slot]?.isBot && _customRoomSlots[slot]?.pending) {
+                                delete _customRoomSlots[slot];
+                            }
+                        });
+                        _renderCustomRoomLobby();
+                    }
                     // Reset tombol Mulai jika gagal memulai Custom Room
                     { const _btnS = document.getElementById('btn-custom-start');
                       if (_btnS && _btnS.textContent.includes('Memulai')) {
@@ -5942,7 +5955,7 @@
                         _pendingCustomJoin = false;
                         _customRoomId = null;
                         _customRoomRole = null;
-                        _customRoomSlots = [];
+                        _customRoomSlots = {};
                         _customPickerSlot = null;
                         document.getElementById('custom-room-overlay').style.display = 'none';
                         _stopCustomPresenceListener();
@@ -6942,7 +6955,7 @@
             _customInviteData = null;
             _customRoomId = null;
             _customRoomRole = null;
-            _customRoomSlots = [];
+            _customRoomSlots = {};
             _customPickerSlot = null;
             _pendingCustomJoin = false;
             // [FIX] Safety net: pastikan custom room overlay & picker tertutup
@@ -7106,6 +7119,7 @@
 
             // [FIX] Reset _isCustomRoomCreator agar tidak tersisa dari sesi lama
             _isCustomRoomCreator = false;
+                        _pendingBotAdd = false;
             // [FIX] Restart listener undangan custom room — setelah game selesai listener
             // sudah tidak aktif, tanpa ini host tidak bisa menerima undangan custom room baru
             if (currentUser) {
@@ -9552,10 +9566,11 @@
         // =============================================
         let _customRoomId         = null;   // room ID dari server
         let _customRoomRole       = null;   // 'pemain' | 'penonton'
-        let _customRoomSlots      = [];     // filled slots [{name, uid}]
+        let _customRoomSlots      = {};     // filled slots {slotPos: {name, uid, isBot?, level?}} — key = nomor slot asli (1-4)
         let _customInviteData     = null;   // pending invite data
         let _customInviteRef      = null;   // Firebase listener ref
         let _customPickerSlot     = null;   // which slot index is being filled
+        let _pendingBotAdd        = false;  // flag: sedang menunggu konfirmasi server untuk ADD_BOT_SLOT
         let _pendingCustomJoin    = false;  // menunggu konfirmasi server setelah JOIN_CUSTOM_ROOM
         let _isCustomRoomCreator  = false;  // true = user yang membuat room (bisa tambah/hapus bot)
         let _isCustomRoom         = false;  // in-game flag
@@ -9578,7 +9593,7 @@
         async function selectKostumRole(role) {
             closeKostumPicker();
             _customRoomRole = role;
-            _customRoomSlots = [];
+            _customRoomSlots = {};
             _customRoomId = null;
             _customPickerSlot = null;
             _isCustomRoomCreator = true; // user ini yang membuat room
@@ -9635,17 +9650,18 @@
                         // WS putus saat pending custom room (belum mulai game) —
                         // server sudah cleanup room via onclose, bersihkan state client
                         // agar tidak orphaned dan memblokir showPartyLobby()
-                        _customRoomSlots.forEach(s => {
+                        Object.values(_customRoomSlots).forEach(s => {
                             if (s?.pending && s.uid) db.ref(`users/${s.uid}/customRoomInvite`).remove().catch(() => {});
                         });
                         if (_customInviteRef) { _customInviteRef.off(); _customInviteRef = null; }
                         _customInviteData = null;
                         _customRoomId = null;
                         _customRoomRole = null;
-                        _customRoomSlots = [];
+                        _customRoomSlots = {};
                         _customPickerSlot = null;
                         _pendingCustomJoin = false;
                         _isCustomRoomCreator = false;
+                        _pendingBotAdd = false;
                         _resetCustomRoomOverlay();
                         document.getElementById('custom-room-overlay').style.display = 'none';
                         _stopCustomPresenceListener();
@@ -9673,14 +9689,13 @@
             const slotsDiv = document.getElementById('custom-slots');
             slotsDiv.innerHTML = '';
 
-            // _customRoomSlots diindeks per posisi:
-            // pemain : index 0 = slot 2, index 1 = slot 3, index 2 = slot 4
-            // penonton: index 0 = slot 1, index 1 = slot 2, index 2 = slot 3, index 3 = slot 4
-            const totalOccupied = (isSpect ? 0 : 1) + _customRoomSlots.filter(Boolean).length;
+            // _customRoomSlots adalah object {slotPos: entry} dengan key = nomor slot asli (1-4)
+            const occupiedCount = Object.values(_customRoomSlots).filter(Boolean).length;
+            const totalOccupied = (isSpect ? 0 : 1) + occupiedCount;
 
             for (let slotPos = 1; slotPos <= 4; slotPos++) {
-                const slotIdx = isSpect ? (slotPos - 1) : (slotPos - 2);
-                const entry = slotIdx >= 0 ? _customRoomSlots[slotIdx] : null;
+                // Slot 1 untuk pemain = selalu "Kamu", tidak ada di _customRoomSlots
+                const entry = (!isSpect && slotPos === 1) ? null : (_customRoomSlots[slotPos] || null);
 
                 const slot = document.createElement('div');
                 slot.className = 'custom-slot';
@@ -9693,7 +9708,7 @@
                         <div class="custom-slot-name">${myName}</div>
                         <div class="custom-slot-tag">Kamu</div>`;
                 } else if (entry?.isBot) {
-                    // Slot bot
+                    // Slot bot — gunakan slotPos asli untuk hapus
                     const levelLabel = entry.level === 1 ? 'Mudah' : entry.level === 2 ? 'Normal' : 'Sulit';
                     slot.classList.add('bot-slot');
                     slot.innerHTML = `
@@ -9701,14 +9716,14 @@
                         <div class="custom-slot-name">Bot Lv${entry.level} <span style="font-size:0.75em;color:rgba(255,255,255,0.4);">(${levelLabel})</span></div>
                         ${canManageBots ? `<button class="custom-slot-clear" onclick="playSound('button');removeBotFromRoom(${slotPos})" title="Hapus bot">✖</button>` : ''}`;
                 } else if (entry) {
-                    // Slot teman (terisi atau pending)
+                    // Slot teman — gunakan slotPos asli untuk kick
                     slot.classList.add('filled');
                     const cIconId = `cslot-icon-${slotPos}`;
                     const cInit   = escHtml(entry.name.charAt(0).toUpperCase());
                     slot.innerHTML = `
                         <div id="${cIconId}" style="width:36px;height:36px;border-radius:6px;overflow:hidden;display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#f093fb,#f5576c);font-size:1em;font-weight:bold;color:white;flex-shrink:0;">${cInit}</div>
                         <div class="custom-slot-name">${escHtml(entry.name)}</div>
-                        ${canManageBots ? `<button class="custom-slot-clear" onclick="playSound('button');clearCustomSlot(${slotIdx})">✖</button>` : ''}`;
+                        ${canManageBots ? `<button class="custom-slot-clear" onclick="playSound('button');clearCustomSlot(${slotPos})">✖</button>` : ''}`;
                     // Fetch avatar + rank frame async (hanya slot yang sudah dikonfirmasi)
                     if (entry.uid && !entry.pending) {
                         (uid => Promise.all([
@@ -9740,7 +9755,7 @@
             }
 
             // Update tombol Mulai — hanya hitung slot confirmed (bukan pending invite)
-            const confirmedCount = (isSpect ? 0 : 1) + _customRoomSlots.filter(s => s && !s.pending).length;
+            const confirmedCount = (isSpect ? 0 : 1) + Object.values(_customRoomSlots).filter(s => s && !s.pending).length;
             const _btnStart = document.getElementById('btn-custom-start');
             _btnStart.disabled = confirmedCount < 2;
             _btnStart.textContent = '▶ Mulai';
@@ -9754,7 +9769,7 @@
 
             // ── Bagian pilih Bot ──────────────────────────────
             const isSpect = _customRoomRole === 'penonton';
-            const totalOccupied = (isSpect ? 0 : 1) + _customRoomSlots.filter(Boolean).length;
+            const totalOccupied = (isSpect ? 0 : 1) + Object.values(_customRoomSlots).filter(Boolean).length;
             const canAddBot = totalOccupied < 4;
             let html = `<div class="custom-friend-picker-title" style="margin-top:4px;">🤖 Isi slot dengan Bot:</div>
                 <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">`;
@@ -9796,7 +9811,7 @@
 
                 // Fungsi render menggunakan data presence terbaru
                 function renderCustomWithPresence(presence) {
-                    const invitedUids = _customRoomSlots.filter(s => s && !s.isBot).map(s => s.uid);
+                    const invitedUids = Object.values(_customRoomSlots).filter(s => s && !s.isBot).map(s => s.uid);
                     invitedUids.push(currentUser.uid);
                     const sorted = [...profiles].sort((a, b) => {
                         const aOk = presence[a.uid]?.online && !presence[a.uid]?.status && !invitedUids.includes(a.uid) ? 0 : 1;
@@ -9860,7 +9875,14 @@
         }
 
         function addBotToRoomSlot(level) {
-            // Simpan slot sebelum null-kan, lalu kirim ADD_BOT_SLOT ke server
+            // Cegah pengiriman ganda sebelum server konfirmasi
+            if (_pendingBotAdd) { console.warn('addBotToRoomSlot: masih menunggu konfirmasi server, diabaikan'); return; }
+            _pendingBotAdd = true;
+            // Optimistic update — tandai slot langsung sebagai pending bot agar UI tidak bisa klik ulang
+            if (_customPickerSlot) {
+                _customRoomSlots[_customPickerSlot] = { name: '🤖 Bot (menunggu...)', uid: null, isBot: true, level, pending: true };
+                _renderCustomRoomLobby();
+            }
             _stopCustomPresenceListener();
             document.getElementById('custom-friend-picker').style.display = 'none';
             addBotToRoom(level); // addBotToRoom baca _customPickerSlot sebelum di-null
@@ -9883,17 +9905,16 @@
             }).catch(() => {});
             // Auto-hapus jika host disconnect (crash/tutup tab)
             customInviteRef.onDisconnect().remove();
-            // Optimistically mark slot as pending — gunakan slotIdx berbasis posisi
-            const isSpect = _customRoomRole === 'penonton';
-            const slotIdx = isSpect ? (slotPos - 1) : (slotPos - 2);
-            _customRoomSlots[slotIdx] = { name: `${name} (menunggu...)`, uid, pending: true };
+            // Optimistically mark slot as pending — gunakan slotPos langsung sebagai key
+            _customRoomSlots[slotPos] = { name: `${name} (menunggu...)`, uid, pending: true };
             _renderCustomRoomLobby();
         }
 
-        function clearCustomSlot(slotIndex) {
-            if (_customRoomSlots[slotIndex]) {
-                const uid = _customRoomSlots[slotIndex].uid;
-                if (_customRoomSlots[slotIndex].pending) {
+        // slotPos = nomor slot asli (1-4), sama dengan key di _customRoomSlots
+        function clearCustomSlot(slotPos) {
+            if (_customRoomSlots[slotPos]) {
+                const uid = _customRoomSlots[slotPos].uid;
+                if (_customRoomSlots[slotPos].pending) {
                     // Undangan masih pending → batalkan via Firebase
                     db.ref(`users/${uid}/customRoomInvite`).remove().catch(() => {});
                 } else if (uid && ws && ws.readyState === WebSocket.OPEN) {
@@ -9903,7 +9924,7 @@
                     document.getElementById('custom-friend-picker').style.display = 'none';
                     return;
                 }
-                _customRoomSlots[slotIndex] = null;
+                delete _customRoomSlots[slotPos];
             }
             _stopCustomPresenceListener();
             document.getElementById('custom-friend-picker').style.display = 'none';
@@ -9914,7 +9935,7 @@
             if (!ws || ws.readyState !== WebSocket.OPEN || !_customRoomId) return;
             // Batalkan semua undangan Firebase yang masih pending (belum dijawab)
             // agar teman yang belum jawab tidak bisa terima undangan yang sudah tidak berlaku
-            _customRoomSlots.forEach(s => {
+            Object.values(_customRoomSlots).forEach(s => {
                 if (s?.pending && s.uid) db.ref(`users/${s.uid}/customRoomInvite`).remove().catch(() => {});
             });
             // Ganti musik ke game music
@@ -9934,7 +9955,7 @@
                 ws.send(JSON.stringify({ type: 'LEAVE_CUSTOM_ROOM', userUid: currentUser ? currentUser.uid : '' }));
             }
             // Batalkan semua undangan yang masih pending
-            _customRoomSlots.forEach(s => {
+            Object.values(_customRoomSlots).forEach(s => {
                 if (s?.pending && s.uid) db.ref(`users/${s.uid}/customRoomInvite`).remove().catch(() => {});
             });
             // Bersihkan Firebase listener undangan masuk (jika sedang jadi penerima)
@@ -9942,10 +9963,11 @@
             _customInviteData = null;
             _customRoomId = null;
             _customRoomRole = null;
-            _customRoomSlots = [];
+            _customRoomSlots = {};
             _customPickerSlot = null;
             _pendingCustomJoin = false;
             _isCustomRoomCreator = false;
+                        _pendingBotAdd = false;
             _resetCustomRoomOverlay();
             document.getElementById('custom-room-overlay').style.display = 'none';
             _stopCustomPresenceListener();
@@ -9954,48 +9976,48 @@
         }
 
         // Handle CUSTOM_ROOM_UPDATE from server (player joined / bot slot changed)
+        // _customRoomSlots sekarang adalah object {slot: entry} dengan slot = nomor posisi asli dari server (1-4)
         function _handleCustomRoomUpdate(data) {
             // data.slots = [{slot, name, uid, isBot?, level?}]
             if (!data.slots) return;
+            // Server sudah konfirmasi update — reset flag pending bot
+            _pendingBotAdd = false;
             const isSpect = _customRoomRole === 'penonton';
             const myUid   = currentUser ? currentUser.uid : null;
-            const prevSlots = _customRoomSlots.slice();
 
-            if (isSpect) {
-                // Penonton: semua 4 slot berdasarkan posisi server
-                const newSlots = new Array(4).fill(null);
-                data.slots.forEach(s => {
-                    const idx = s.slot - 1;
-                    if (idx < 0 || idx >= 4) return;
-                    newSlots[idx] = s.isBot
-                        ? { name: s.name, uid: null, isBot: true, level: s.level }
-                        : { name: s.name, uid: s.uid };
-                });
-                for (let i = 0; i < 4; i++) {
-                    if (!newSlots[i] && _customRoomSlots[i]?.pending) newSlots[i] = _customRoomSlots[i];
-                }
-                _customRoomSlots = newSlots;
-            } else {
-                // Pemain: slot 1 UI selalu "Kamu" — exclude UID sendiri, urutkan sisanya
-                const others = data.slots
-                    .filter(s => s.isBot || s.uid !== myUid)
-                    .sort((a, b) => a.slot - b.slot);
-                const newSlots = new Array(3).fill(null);
-                others.forEach((s, i) => {
-                    if (i >= 3) return;
-                    newSlots[i] = s.isBot
-                        ? { name: s.name, uid: null, isBot: true, level: s.level }
-                        : { name: s.name, uid: s.uid };
-                });
-                // Pertahankan pending invite di slot yang belum dikonfirmasi server
-                for (let i = 0; i < 3; i++) {
-                    if (!newSlots[i] && _customRoomSlots[i]?.pending) newSlots[i] = _customRoomSlots[i];
-                }
-                _customRoomSlots = newSlots;
+            // Simpan pending invite lama agar tidak hilang saat update
+            const prevPendingBySlot = {};
+            if (Array.isArray(_customRoomSlots)) {
+                // Migrasi format lama (array) ke object — hanya saat pertama kali
+                _customRoomSlots = {};
             }
+            Object.entries(_customRoomSlots).forEach(([slot, s]) => {
+                if (s && s.pending) prevPendingBySlot[slot] = s;
+            });
+
+            const newSlots = {};
+            data.slots.forEach(s => {
+                if (s.slot < 1 || s.slot > 4) return;
+                // Skip slot host sendiri (slot 1 untuk pemain) — ditangani langsung di render
+                if (!isSpect && s.uid === myUid) return;
+                newSlots[s.slot] = s.isBot
+                    ? { name: s.name, uid: null, isBot: true, level: s.level }
+                    : { name: s.name, uid: s.uid };
+            });
+
+            // Pertahankan pending invite di slot yang belum dikonfirmasi server
+            Object.entries(prevPendingBySlot).forEach(([slot, s]) => {
+                if (!newSlots[slot]) newSlots[slot] = s;
+            });
+
             // Detect new human players joining (not self, not bot, not pending)
-            const prevUids = new Set(prevSlots.filter(s => s && !s.isBot && s.uid).map(s => s.uid));
-            const newHumans = _customRoomSlots.filter(s => s && !s.isBot && s.uid && !s.pending && !prevUids.has(s.uid) && s.uid !== myUid);
+            const prevUids = new Set(
+                Object.values(_customRoomSlots)
+                    .filter(s => s && !s.isBot && s.uid)
+                    .map(s => s.uid)
+            );
+            _customRoomSlots = newSlots;
+            const newHumans = Object.values(newSlots).filter(s => s && !s.isBot && s.uid && !s.pending && !prevUids.has(s.uid) && s.uid !== myUid);
             if (newHumans.length > 0) {
                 playSound('invite');
                 newHumans.forEach(p => showToast(`✅ ${p.name} bergabung ke lobi!`, 'success'));
@@ -10005,6 +10027,8 @@
 
         function addBotToRoom(level) {
             if (!ws || ws.readyState !== WebSocket.OPEN || !_customRoomId) return;
+            // Guard: jangan kirim jika slot belum dipilih (bisa terjadi jika race condition atau double-click)
+            if (!_customPickerSlot) { console.warn('addBotToRoom: _customPickerSlot null, dibatalkan'); return; }
             ws.send(JSON.stringify({ type: 'ADD_BOT_SLOT', level, slotPosition: _customPickerSlot, userUid: currentUser ? currentUser.uid : '' }));
         }
 
@@ -10065,9 +10089,10 @@
                 // tiba sebelum KICKED_FROM_ROOM WebSocket message. Bersihkan state lama dan lanjut.
                 _customRoomId = null;
                 _customRoomRole = null;
-                _customRoomSlots = [];
+                _customRoomSlots = {};
                 _pendingCustomJoin = false;
                 _isCustomRoomCreator = false;
+                        _pendingBotAdd = false;
             }
 
             const inv = _customInviteData;
@@ -10094,9 +10119,10 @@
                 }
                 _customRoomId = inv.roomId;
                 _customRoomRole = 'pemain';
-                _customRoomSlots = [];
+                _customRoomSlots = {};
                 _pendingCustomJoin = true;
-                _isCustomRoomCreator = false; // bergabung sebagai tamu, bukan pencipta room
+                _isCustomRoomCreator = false;
+                        _pendingBotAdd = false; // bergabung sebagai tamu, bukan pencipta room
                 _setPresenceStatus('inLobby');
                 showToast('⏳ Bergabung ke custom room...', 'info');
                 const myName = currentNickname || lsGet(LS.NICKNAME) || 'Player';
@@ -10112,7 +10138,7 @@
                 _pendingCustomJoin = false;
                 _customRoomId = null;
                 _customRoomRole = null;
-                _customRoomSlots = [];
+                _customRoomSlots = {};
             }
         }
 
