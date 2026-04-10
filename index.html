@@ -8617,29 +8617,44 @@
                 return;
             }
 
-            // [FIX] Guard: jika ada sisa state guest dari sesi lalu (misal setelah game selesai
-            // lalu buka Ranked lagi), bersihkan paksa sebelum render tampilan host baru.
-            // Ini mencegah tampilan "tamu menunggu host" muncul di sesi Ranked berikutnya.
-            if (_isPartyGuest) {
-                _closeGuestPartyLobby();
-                _isPartyGuest    = false;
-                _partyId         = null;
-                _partyFirebaseId = null;
-                _partyHostUid    = null;
-                _partyHostName   = null;
-                _partyQueueSize  = null;
+            // [FIX] Hard reset semua state & DOM party sebelum render sebagai host baru.
+            // Ini menangani kasus: setelah game selesai/menyerah, goToHome() mereset variabel JS
+            // (_isPartyGuest=false dll) tapi TIDAK mereset DOM — sehingga tombol Mulai masih
+            // tersembunyi (di-hide oleh _showGuestPartyLobby) dan slot 1 masih tampilkan
+            // nama/avatar lama. Solusinya: showPartyLobby() selalu restore DOM secara penuh,
+            // terlepas dari nilai _isPartyGuest saat ini.
+
+            // Matikan semua listener guest yang mungkin masih aktif
+            if (_partySignalRef)      { _partySignalRef.off();      _partySignalRef = null; }
+            if (_guestPartyStatusRef) { _guestPartyStatusRef.off(); _guestPartyStatusRef = null; }
+            if (_partyKickRef)        { _partyKickRef.off();        _partyKickRef = null; }
+            if (_partyGuestRosterRef) { _partyGuestRosterRef.off(); _partyGuestRosterRef = null; }
+            if (currentUser) {
+                db.ref(`users/${currentUser.uid}/partyCancelSearch`).off();
             }
 
-            _resetPartyLobbyOverlay();
-            // Reset state
-            _partyFriendUid = null; _partyFriendName = null;
+            // Reset semua state JS party
+            _isPartyGuest    = false;
+            _partyHostUid    = null;
+            _partyHostName   = null;
+            _myPartySlot     = 2;
+            _guestSlot3Uid   = null;
+            _partyFriendUid  = null; _partyFriendName  = null;
             _partyFriend2Uid = null; _partyFriend2Name = null;
-            _partyId = null; _openPickerSlot = null;
+            _partyId         = null; _partyFirebaseId  = null;
+            _partyQueueSize  = null; _openPickerSlot   = null;
+
+            // Reset DOM secara penuh — ini yang hilang sebelumnya:
+            // tombol Mulai, slot 1, slot 2, slot 3 dikembalikan ke kondisi awal host
+            _resetPartyLobbyOverlay();
             _stopPartyPresenceListener();
             document.getElementById('party-friend-picker').style.display = 'none';
             _resetSlot2();
             _resetSlot3();
-            // Isi slot 1 dengan nama player sendiri
+            // Restore tombol Mulai (bisa tersembunyi dari sesi tamu sebelumnya)
+            const lobbyCard = document.querySelector('.party-lobby-card');
+            if (lobbyCard) lobbyCard.querySelector('.party-btn-start').style.display = '';
+            // Isi slot 1 dengan nama & avatar player sendiri
             const name = currentNickname || lsGet(LS.NICKNAME) || 'Kamu';
             document.getElementById('pslot-1-name').textContent = name;
             document.getElementById('pslot-1-icon').innerHTML = _getAvatarWithFrameHtml(54);
