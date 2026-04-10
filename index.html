@@ -6896,6 +6896,19 @@
             _stopPartyPresenceListener();
             _stopCustomPresenceListener();
 
+            // [FIX] Bersihkan Firebase party nodes agar tidak tersisa sebagai state stale
+            // saat player kembali ke home setelah pertandingan selesai/menyerah.
+            // Tanpa ini, node lama (partySignal, partyKick, partyCancelSearch) bisa
+            // terbaca oleh listener baru saat tamu membuka Ranked lagi → tampil sebagai tamu.
+            if (currentUser) {
+                db.ref(`users/${currentUser.uid}/partySignal`).off();
+                db.ref(`users/${currentUser.uid}/partySignal`).remove().catch(() => {});
+                db.ref(`users/${currentUser.uid}/partyCancelSearch`).off();
+                db.ref(`users/${currentUser.uid}/partyCancelSearch`).remove().catch(() => {});
+                db.ref(`users/${currentUser.uid}/partyKick`).off();
+                db.ref(`users/${currentUser.uid}/partyKick`).remove().catch(() => {});
+            }
+
             // Bersihkan semua timer dan handler force pick agar tidak bocor ke pertandingan berikutnya
             stopForcePickHeartbeat();
             if (autoForcePickTimer) { clearTimeout(autoForcePickTimer); autoForcePickTimer = null; }
@@ -8580,6 +8593,20 @@
                 restoreCustomRoom();
                 return;
             }
+
+            // [FIX] Guard: jika ada sisa state guest dari sesi lalu (misal setelah game selesai
+            // lalu buka Ranked lagi), bersihkan paksa sebelum render tampilan host baru.
+            // Ini mencegah tampilan "tamu menunggu host" muncul di sesi Ranked berikutnya.
+            if (_isPartyGuest) {
+                _closeGuestPartyLobby();
+                _isPartyGuest    = false;
+                _partyId         = null;
+                _partyFirebaseId = null;
+                _partyHostUid    = null;
+                _partyHostName   = null;
+                _partyQueueSize  = null;
+            }
+
             _resetPartyLobbyOverlay();
             // Reset state
             _partyFriendUid = null; _partyFriendName = null;
