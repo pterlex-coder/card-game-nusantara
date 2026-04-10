@@ -5370,6 +5370,10 @@
                 'custom-room-overlay',
                 'custom-room-invite-popup',
                 'avatar-picker-overlay',
+                // [FIX] Ensiklopedia, Teman, & Pengembang sebelumnya tidak ditutup saat lawan ditemukan
+                'encyclopedia-screen',
+                'teman-screen',
+                'pengembang-screen',
             ];
             ids.forEach(id => {
                 const el = document.getElementById(id);
@@ -5380,6 +5384,13 @@
             const customBubble = document.getElementById('custom-lobby-bubble');
             if (partyBubble) partyBubble.style.display = 'none';
             if (customBubble) customBubble.style.display = 'none';
+            // [FIX] Tutup juga overlay yang pakai classList/display terpisah
+            const _visitProf = document.getElementById('visit-profile-screen');
+            if (_visitProf) _visitProf.classList.remove('active');
+            const _drawLvl = document.getElementById('draw-level-overlay');
+            if (_drawLvl) _drawLvl.classList.remove('active');
+            const _rankInfo = document.getElementById('rank-info-overlay');
+            if (_rankInfo) _rankInfo.style.display = 'none';
         }
 
         function startMatchmaking() {
@@ -5707,6 +5718,8 @@
                     break;
 
                 case 'GAME_STARTED':
+                    // [FIX] Tutup semua halaman (ensiklopedia, teman, profil, dll) saat game dimulai
+                    closeAllScreens();
                     _setPresenceStatus('inGame');
                     // Handle custom room / spectator flags
                     _isCustomRoom = !!data.isCustomRoom;
@@ -6873,6 +6886,16 @@
             _customRoomSlots = [];
             _customPickerSlot = null;
             _pendingCustomJoin = false;
+            // [FIX] Safety net: pastikan custom room overlay & picker tertutup
+            // (seharusnya sudah ditutup oleh GAME_STARTED, tapi jaga-jaga edge case)
+            _resetCustomRoomOverlay();
+            const _crOverlay = document.getElementById("custom-room-overlay");
+            if (_crOverlay) _crOverlay.style.display = "none";
+            _stopCustomPresenceListener();
+            const _cfPicker = document.getElementById("custom-friend-picker");
+            if (_cfPicker) _cfPicker.style.display = "none";
+            const _clBubble = document.getElementById("custom-lobby-bubble");
+            if (_clBubble) _clBubble.style.display = "none";
 
             // Bersihkan state party (listener undangan masuk tetap aktif di home screen)
             // _partyStatusRef/_partyStatus2Ref adalah listener respons invite yang kamu kirim — tidak perlu aktif saat di home
@@ -7021,6 +7044,14 @@
             preScreen.classList.remove('hidden');
             DOM.matchmakingScreen.classList.add('active');
             document.getElementById('profile-badge').style.display = 'block';
+
+            // [FIX] Reset _isCustomRoomCreator agar tidak tersisa dari sesi lama
+            _isCustomRoomCreator = false;
+            // [FIX] Restart listener undangan custom room — setelah game selesai listener
+            // sudah tidak aktif, tanpa ini host tidak bisa menerima undangan custom room baru
+            if (currentUser) {
+                _startCustomRoomInviteListener();
+            }
         }
 
         // =============================================
