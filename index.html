@@ -5358,6 +5358,16 @@
                 // Tandai bahwa user sudah masuk ke main menu
                 _hasEnteredMain = true;
 
+                // Flush bubble lobby yang tertahan saat user masih di pre-loading screen
+                if (_pendingPartyBubble) {
+                    _pendingPartyBubble = false;
+                    document.getElementById('party-lobby-bubble').style.display = 'flex';
+                }
+                if (_pendingCustomBubble) {
+                    _pendingCustomBubble = false;
+                    document.getElementById('custom-lobby-bubble').style.display = 'flex';
+                }
+
                 // Flush undangan yang tertahan saat user masih di pre-loading screen.
                 // Delay 1 detik agar UI matchmaking selesai render sebelum popup muncul.
                 if (_pendingInviteBeforePlay) {
@@ -8639,6 +8649,8 @@
         // FIX: sembunyikan popup undangan sampai user menekan PLAY, lalu flush setelah transisi selesai
         let _hasEnteredMain          = false; // true setelah goToMatchmaking() selesai transisi
         let _pendingInviteBeforePlay = null;  // simpan undangan yang masuk sebelum PLAY ditekan
+        let _pendingPartyBubble      = false; // true jika party bubble perlu muncul setelah PLAY
+        let _pendingCustomBubble     = false; // true jika custom room bubble perlu muncul setelah PLAY
         let _openPickerSlot   = null;  // Slot mana yang sedang memilih teman (2 atau 3)
         let _partyPresenceRef = null;  // Real-time listener presence untuk party picker
         let _partyPresenceCb  = null;
@@ -8653,6 +8665,8 @@
             ov.style.webkitBackdropFilter = 'none';
             ov.style.pointerEvents = 'none';
             document.querySelector('#party-lobby-overlay .party-lobby-card').style.display = 'none';
+            // Jangan tampilkan bubble jika user belum menekan PLAY
+            if (!_hasEnteredMain) { _pendingPartyBubble = true; return; }
             document.getElementById('party-lobby-bubble').style.display = 'flex';
         }
         function restorePartyLobby() {
@@ -8681,6 +8695,8 @@
             ov.style.webkitBackdropFilter = 'none';
             ov.style.pointerEvents = 'none';
             document.querySelector('#custom-room-overlay .custom-room-card').style.display = 'none';
+            // Jangan tampilkan bubble jika user belum menekan PLAY
+            if (!_hasEnteredMain) { _pendingCustomBubble = true; return; }
             document.getElementById('custom-lobby-bubble').style.display = 'flex';
         }
         function restoreCustomRoom() {
