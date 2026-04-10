@@ -5344,6 +5344,25 @@
                 preScreen.style.display = 'none';
                 document.getElementById('matchmaking-screen').classList.add('active');
                 document.getElementById('profile-badge').style.display = 'block';
+
+                // Tandai bahwa user sudah masuk ke main menu
+                _hasEnteredMain = true;
+
+                // Flush undangan yang tertahan saat user masih di pre-loading screen.
+                // Delay 1 detik agar UI matchmaking selesai render sebelum popup muncul.
+                if (_pendingInviteBeforePlay) {
+                    const inv = _pendingInviteBeforePlay;
+                    _pendingInviteBeforePlay = null;
+                    setTimeout(() => {
+                        // Validasi ulang: pastikan undangan belum kadaluarsa (> 2 menit)
+                        if (!inv || Date.now() - inv.timestamp > 120000) return;
+                        // Pastikan data masih konsisten (listener bisa sudah reset _partyInviteData ke null)
+                        if (!_partyInviteData) return;
+                        document.getElementById('party-invite-msg').textContent =
+                            `${inv.fromName || 'Seorang teman'} mengajakmu main bareng!`;
+                        document.getElementById('party-invite-popup').style.display = 'flex';
+                    }, 1000);
+                }
             }, 500);
         }
 
@@ -7010,7 +7029,7 @@
             if (_ws) { _ws.onmessage = null; _ws.onclose = null; _ws.onerror = null; }
             _endGameShown = false; // reset untuk pertandingan berikutnya
             if (_ws && _ws.readyState === WebSocket.OPEN && _roomId) {
-                try { _ws.send(JSON.stringify({ type: 'LEAVE_MATCH', roomId: _roomId })); } catch(e) {}
+                try { _ws.send(JSON.stringify({ type: 'LEAVE_MATCH', roomId: _roomId, isSpectator: !!_isSpectator })); } catch(e) {}
                 const _closeDelay = _pendingWinSave ? 5000 : 200;
                 setTimeout(() => { try { _ws.close(); } catch(e) {} }, _closeDelay);
             } else if (_ws) {
@@ -8575,6 +8594,9 @@
         let _partyGuestRosterRef= null;  // Guest: listener roster untuk update slot 3 saat tamu lain keluar
         let _guestSlot3Uid      = null;  // Guest: UID pemain di slot 3
         let _pendingPartySignals = null; // FIX race condition: { uids, partyId, partySize } — dikirim di ws.onopen bukan langsung
+        // FIX: sembunyikan popup undangan sampai user menekan PLAY, lalu flush setelah transisi selesai
+        let _hasEnteredMain          = false; // true setelah goToMatchmaking() selesai transisi
+        let _pendingInviteBeforePlay = null;  // simpan undangan yang masuk sebelum PLAY ditekan
         let _openPickerSlot   = null;  // Slot mana yang sedang memilih teman (2 atau 3)
         let _partyPresenceRef = null;  // Real-time listener presence untuk party picker
         let _partyPresenceCb  = null;
@@ -9117,6 +9139,14 @@
                 _partyInviteData = inv;
                 // Hapus partyKick lama agar tidak trigger "party dibubarkan" setelah terima undangan baru
                 db.ref(`users/${currentUser.uid}/partyKick`).remove().catch(() => {});
+
+                // Jika user belum menekan PLAY (masih di pre-loading screen), tahan undangan dulu.
+                // Undangan akan ditampilkan otomatis setelah goToMatchmaking() selesai transisi.
+                if (!_hasEnteredMain) {
+                    _pendingInviteBeforePlay = inv;
+                    return;
+                }
+
                 document.getElementById('party-invite-msg').textContent =
                     `${inv.fromName || 'Seorang teman'} mengajakmu main bareng!`;
                 document.getElementById('party-invite-popup').style.display = 'flex';
