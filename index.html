@@ -9947,12 +9947,6 @@
                     db.ref(`users/${currentUser.uid}/customRoomInvite`).remove();
                     return;
                 }
-                // Abaikan invite jika player belum di home screen (masih di splash screen / loading).
-                // Data invite dibiarkan di Firebase — akan muncul otomatis saat player masuk home.
-                const isAtHome = document.getElementById('matchmaking-screen') &&
-                                 document.getElementById('matchmaking-screen').classList.contains('active');
-                if (!isAtHome) return;
-
                 _customInviteData = inv;
                 document.getElementById('custom-invite-msg').textContent =
                     `${inv.fromName || 'Seorang teman'} mengundangmu ke custom room!`;
