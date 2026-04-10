@@ -6882,6 +6882,17 @@
             if (_partyKickRef)    { _partyKickRef.off();    _partyKickRef    = null; }
             if (_partyGuestRosterRef) { _partyGuestRosterRef.off(); _partyGuestRosterRef = null; }
             if (_guestPartyStatusRef) { _guestPartyStatusRef.off(); _guestPartyStatusRef = null; }
+            // [FIX HOST] _partyRosterRef (listener roster sisi host) juga harus dimatikan —
+            // sebelumnya tidak di-cleanup di goToHome, menyebabkan listener lama bocor
+            // ke sesi berikutnya dan bisa trigger slot reset secara tidak sengaja.
+            if (_partyRosterRef)  { _partyRosterRef.off();  _partyRosterRef  = null; }
+
+            // [FIX HOST] Simpan UID teman & partyId SEBELUM di-null,
+            // agar bisa dipakai untuk cleanup Firebase di bawah.
+            const _savedFriendUid   = _partyFriendUid;
+            const _savedFriend2Uid  = _partyFriend2Uid;
+            const _savedFirebaseId  = _partyFirebaseId;
+
             _partyInviteData  = null;
             _partyFriendUid   = null; _partyFriendName  = null;
             _partyFriend2Uid  = null; _partyFriend2Name = null;
@@ -6896,17 +6907,29 @@
             _stopPartyPresenceListener();
             _stopCustomPresenceListener();
 
-            // [FIX] Bersihkan Firebase party nodes agar tidak tersisa sebagai state stale
+            // [FIX GUEST] Bersihkan Firebase party nodes agar tidak tersisa sebagai state stale
             // saat player kembali ke home setelah pertandingan selesai/menyerah.
             // Tanpa ini, node lama (partySignal, partyKick, partyCancelSearch) bisa
             // terbaca oleh listener baru saat tamu membuka Ranked lagi → tampil sebagai tamu.
+            // [FIX HOST] Bersihkan juga Firebase nodes sisi host: partyRoster, partyStatus,
+            // dan partyInvite ke teman — agar saat host buka Ranked lagi, tidak ada data
+            // lama yang membuat tamu mengira party sebelumnya masih aktif.
             if (currentUser) {
+                // Nodes bersama (guest & host)
                 db.ref(`users/${currentUser.uid}/partySignal`).off();
                 db.ref(`users/${currentUser.uid}/partySignal`).remove().catch(() => {});
                 db.ref(`users/${currentUser.uid}/partyCancelSearch`).off();
                 db.ref(`users/${currentUser.uid}/partyCancelSearch`).remove().catch(() => {});
                 db.ref(`users/${currentUser.uid}/partyKick`).off();
                 db.ref(`users/${currentUser.uid}/partyKick`).remove().catch(() => {});
+                // Nodes khusus host: hapus partyStatus & partyRoster lama
+                db.ref(`users/${currentUser.uid}/partyStatus`).remove().catch(() => {});
+                if (_savedFirebaseId) {
+                    db.ref(`partyRoster/${_savedFirebaseId}`).remove().catch(() => {});
+                }
+                // Hapus partyInvite yang mungkin masih terkirim ke teman-teman
+                if (_savedFriendUid)  db.ref(`users/${_savedFriendUid}/partyInvite`).remove().catch(() => {});
+                if (_savedFriend2Uid) db.ref(`users/${_savedFriend2Uid}/partyInvite`).remove().catch(() => {});
             }
 
             // Bersihkan semua timer dan handler force pick agar tidak bocor ke pertandingan berikutnya
