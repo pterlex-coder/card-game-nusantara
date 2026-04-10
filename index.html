@@ -9998,7 +9998,6 @@
                 _renderCustomRoomLobby();
             }
             _stopCustomPresenceListener();
-            _stopCustomDeclineListener();
             document.getElementById('custom-friend-picker').style.display = 'none';
             addBotToRoom(level); // addBotToRoom baca _customPickerSlot sebelum di-null
             _customPickerSlot = null;
@@ -10007,7 +10006,6 @@
         async function inviteToCustomRoom(uid, name, slotPos) {
             if (!currentUser || !_customRoomId) return;
             _stopCustomPresenceListener();
-            _stopCustomDeclineListener();
             document.getElementById('custom-friend-picker').style.display = 'none';
             // Send Firebase invite
             const myName = currentNickname || lsGet(LS.NICKNAME) || 'Player';
@@ -10037,14 +10035,12 @@
                     // Pemain sudah join → kick via WebSocket; UI diupdate saat CUSTOM_ROOM_UPDATE tiba
                     ws.send(JSON.stringify({ type: 'KICK_FROM_ROOM', roomId: _customRoomId, targetUid: uid }));
                     _stopCustomPresenceListener();
-            _stopCustomDeclineListener();
                     document.getElementById('custom-friend-picker').style.display = 'none';
                     return;
                 }
                 delete _customRoomSlots[slotPos];
             }
             _stopCustomPresenceListener();
-            _stopCustomDeclineListener();
             document.getElementById('custom-friend-picker').style.display = 'none';
             _renderCustomRoomLobby();
         }
