@@ -3337,14 +3337,24 @@
                 style="margin-top:6px; padding:6px 10px; background:#f0f4ff;
                        border-radius:8px; font-size:0.78em; color:#555; text-align:left;"></div>
             <div id="match-result-rank-change"></div>
-            <button onclick="playSound('button');goToHome()"
-                style="margin-top:10px; width:100%; padding:10px; font-size:0.95em; font-weight:bold;
-                       background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
-                       color:white; border:none; border-radius:10px; cursor:pointer;
-                       box-shadow:0 4px 15px rgba(102,126,234,0.4); transition:transform 0.15s;"
-                onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
-                🎮 Kembali ke Home
-            </button>
+            <div style="display:flex; flex-direction:column; gap:8px; margin-top:10px;">
+                <button id="btn-match-result-watch" onclick="playSound('x');document.getElementById('match-result-modal').classList.remove('active')"
+                    style="display:none; width:100%; padding:10px; font-size:0.95em; font-weight:bold;
+                           background:linear-gradient(135deg,#43a047,#2e7d32);
+                           color:white; border:none; border-radius:10px; cursor:pointer;
+                           box-shadow:0 4px 15px rgba(67,160,71,0.4); transition:transform 0.15s;"
+                    onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                    👀 Lanjut Menonton
+                </button>
+                <button onclick="playSound('button');goToHome()"
+                    style="width:100%; padding:10px; font-size:0.95em; font-weight:bold;
+                           background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+                           color:white; border:none; border-radius:10px; cursor:pointer;
+                           box-shadow:0 4px 15px rgba(102,126,234,0.4); transition:transform 0.15s;"
+                    onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                    🎮 Kembali ke Home
+                </button>
+            </div>
         </div>
     </div>
 
@@ -5818,6 +5828,8 @@
                             if (_deckDiv) _deckDiv.innerHTML = '';
                         }
                         updateGameUI(data.state);
+                        // Untuk spectator: pastikan tombol "Hasil Pertandingan" langsung muncul
+                        if (_isSpectator) updateButtons();
                         startPingMeasurement();
                         addLog(_isSpectator ? '📺 Kamu menonton pertandingan ini.' : '🎮 Game dimulai! Selamat bermain!');
                         // Pastikan bgMusic2 jalan untuk semua pemain (host, guest, party, custom room)
@@ -6154,6 +6166,10 @@
                     deckDiv.appendChild(section);
                 });
             }
+
+            // Update tombol surrender/hasil setiap kali tampilan dirender ulang
+            // Ini memastikan tombol "Hasil Pertandingan" muncul saat gameOver = true
+            updateButtons();
         }
 
         // =============================================
@@ -6617,6 +6633,9 @@
             lsClear();
             currentRoomId = null; // Cegah beforeunload menyimpan ulang room yang sudah selesai
 
+            // Tandai gameState sebagai selesai agar updateButtons() bisa mendeteksi untuk spectator
+            if (gameState) gameState.gameOver = true;
+
             // Tutup surrender-choice & match-result modal jika masih terbuka
             document.getElementById('surrender-choice-modal').classList.remove('active');
             document.getElementById('match-result-modal').classList.remove('active');
@@ -6706,6 +6725,10 @@
                     }
                 }
             }
+
+            // Perbarui tombol: untuk spectator, ini akan menampilkan "Hasil Pertandingan"
+            // (gameState.gameOver sudah di-set true di atas)
+            updateButtons();
         }
 
         // =============================================
@@ -6764,6 +6787,13 @@
             `;
 
             document.getElementById('match-result-modal').classList.add('active');
+
+            // Tampilkan tombol "Lanjut Menonton" jika pertandingan masih berlangsung
+            // (spectator atau pemain yang sudah kalah ingin tetap menonton)
+            const btnWatch = document.getElementById('btn-match-result-watch');
+            if (btnWatch) {
+                btnWatch.style.display = (!gameState.gameOver) ? 'block' : 'none';
+            }
 
             // Tampilkan rank change jika rank pemain sudah ditentukan (skip untuk Custom Room)
             const rcContainer = document.getElementById('match-result-rank-change');
@@ -7372,13 +7402,25 @@
         }
 
         function updateButtons() {
-            if (!gameState || !myPlayerId) return;
-            const player = gameState.players.find(p => p.id === myPlayerId);
-            if (!player) return;
-
             const btnDraw       = document.getElementById('btn-draw');
             const btnSurrender  = document.getElementById('btn-surrender');
             const btnShowResult = document.getElementById('btn-show-result');
+
+            // --- Mode Spectator ---
+            // myPlayerId = null untuk spectator, tapi tombol hasil tetap harus dikelola
+            if (_isSpectator || !myPlayerId) {
+                // Surrender tidak relevan — pastikan selalu tersembunyi
+                if (btnSurrender)  { btnSurrender.style.display  = 'none'; }
+                // Tombol "Hasil Pertandingan" selalu tampil untuk penonton
+                // agar kapanpun bisa melihat skor sementara atau pulang ke home
+                if (btnShowResult) { btnShowResult.style.display = 'inline-block'; }
+                return;
+            }
+
+            // --- Mode Pemain Biasa ---
+            if (!gameState) return;
+            const player = gameState.players.find(p => p.id === myPlayerId);
+            if (!player) return;
 
             btnDraw.disabled = !player.mustDraw || player.hasPlayed;
             btnDraw.onclick  = player.mustDraw ? playerDrawCard : null;
