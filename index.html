@@ -102,7 +102,8 @@
         body:has(.game-container.active) {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
             background-image: none !important;
-            overflow-y: auto;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
         }
         /* ============================================ */
         /* MATCHMAKING SCREEN */
@@ -121,6 +122,7 @@
             background: url('gambar/background/bg1.png') no-repeat center center;
             background-size: 100% 100%;
             z-index: 10000;
+            overflow-y: auto;
         }
         #matchmaking-screen.active { display: flex; }
         #matchmaking-screen.hidden { display: none; }
@@ -384,9 +386,9 @@
             background: rgba(10, 5, 40, 0.82);
             -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
             border: 2px solid rgba(255,255,255,0.18);
-            border-radius: 20px;
-            padding: 20px 22px;
-            max-width: 740px;
+            border-radius: 24px;
+            padding: 30px 32px;
+            max-width: 620px;
             width: 96%;
             text-align: center;
             margin: 0 auto;
@@ -397,28 +399,28 @@
             to   { opacity: 1; transform: translateY(0); }
         }
         .prov-preview-title {
-            font-size: 1.5em; font-weight: bold; color: #fff;
-            margin-bottom: 4px;
+            font-size: 1.9em; font-weight: bold; color: #fff;
+            margin-bottom: 6px;
         }
         .prov-preview-subtitle {
-            font-size: 0.95em; color: rgba(255,255,255,0.65);
-            margin-bottom: 16px;
+            font-size: 1.05em; color: rgba(255,255,255,0.65);
+            margin-bottom: 20px;
         }
         .prov-grid {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr 1fr;
-            gap: 6px;
-            margin-bottom: 16px;
+            gap: 10px;
+            margin-bottom: 22px;
         }
         .prov-chip {
             background: rgba(255,255,255,0.1);
             border: 1.5px solid rgba(255,255,255,0.2);
-            border-radius: 10px;
-            padding: 5px 7px;
-            font-size: 0.74em;
+            border-radius: 12px;
+            padding: 10px 10px;
+            font-size: 0.88em;
             color: #fff;
-            display: flex; align-items: center; gap: 5px;
-            text-align: left;
+            display: flex; flex-direction: column; align-items: center; gap: 6px;
+            text-align: center;
         }
         .prov-chip.mandatory {
             background: rgba(255, 200, 0, 0.18);
@@ -426,11 +428,11 @@
             color: #ffd700;
             font-weight: bold;
         }
-        .prov-chip-icon { width: 32px; height: 24px; object-fit: contain; border-radius: 4px; flex-shrink: 0; }
+        .prov-chip-icon { width: 64px; height: 44px; object-fit: contain; border-radius: 6px; flex-shrink: 0; }
         .prov-countdown {
-            font-size: 1.1em; color: rgba(255,255,255,0.8);
+            font-size: 1.2em; color: rgba(255,255,255,0.8);
         }
-        .prov-countdown span { color: #ffd700; font-weight: bold; font-size: 1.3em; }
+        .prov-countdown span { color: #ffd700; font-weight: bold; font-size: 1.4em; }
 
         /* RIGHT PANEL */
         .right-panel {
@@ -767,11 +769,11 @@
         .province-info-card-name { font-size:0.75em; font-weight:bold; text-align:center; line-height:1.1; flex-grow:1; display:flex; align-items:center; justify-content:center; overflow:hidden; text-overflow:ellipsis; word-wrap:break-word; }
         .province-info-card-type { font-size:0.6em; text-align:center; color:#666; margin-top:3px; padding-top:3px; border-top:1px solid rgba(0,0,0,0.1); }
         .province-info-card-owned {
-            position: absolute; top: -35px; left: 50%; transform: translateX(-50%);
+            position: absolute; top: 4px; left: 4px;
             background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
-            color: white; padding: 4px 10px; border-radius: 12px;
-            font-size: 0.7em; font-weight: bold; box-shadow: 0 3px 10px rgba(76,175,80,0.5);
-            z-index: 10; white-space: nowrap; border: 2px solid #2e7d32;
+            color: white; padding: 3px 7px; border-radius: 10px;
+            font-size: 0.62em; font-weight: bold; box-shadow: 0 2px 6px rgba(76,175,80,0.5);
+            z-index: 10; white-space: nowrap; border: 1.5px solid #2e7d32;
         }
 
         /* GAME OVER MODAL */
@@ -2276,8 +2278,10 @@
             .party-slot-name { font-size: 0.72em; }
 
             /* Province preview */
-            #provinces-preview { padding: 14px 12px; }
-            .prov-grid { grid-template-columns: 1fr 1fr 1fr 1fr; }
+            #provinces-preview { padding: 18px 14px; }
+            .prov-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+            .prov-chip-icon { width: 48px; height: 34px; }
+            .prov-chip { font-size: 0.8em; }
 
             /* Log */
             .log-area { max-height: 80px; }
@@ -2330,6 +2334,35 @@
             box-shadow: 0 6px 24px rgba(0,0,0,0.5);
             max-width: 230px; animation: bubbleIn 0.25s ease;
         }
+        /* FLOATING MATCHMAKING BAR */
+        #matchmaking-float-bar {
+            position: fixed; top: 12px; left: 50%; transform: translateX(-50%);
+            background: linear-gradient(135deg, rgba(20,10,60,0.97), rgba(60,20,120,0.97));
+            border: 1.5px solid rgba(255,255,255,0.25);
+            border-radius: 50px; padding: 8px 14px 8px 14px;
+            align-items: center; gap: 10px;
+            z-index: 99999;
+            box-shadow: 0 6px 24px rgba(0,0,0,0.5);
+            animation: floatBarIn 0.3s ease;
+            white-space: nowrap;
+        }
+        @keyframes floatBarIn {
+            from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+            to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+        .mf-icon { font-size: 1.1em; }
+        .mf-info { display: flex; flex-direction: column; gap: 1px; }
+        .mf-label { font-size: 0.82em; font-weight: 700; color: #fff; }
+        .mf-timer { font-size: 0.75em; color: rgba(255,255,255,0.7); font-variant-numeric: tabular-nums; }
+        .mf-cancel-btn {
+            background: rgba(255,80,80,0.25); border: 1px solid rgba(255,80,80,0.5);
+            color: #fff; border-radius: 50%; width: 26px; height: 26px;
+            cursor: pointer; font-size: 0.8em; display: flex; align-items: center;
+            justify-content: center; transition: background 0.2s;
+            flex-shrink: 0;
+        }
+        .mf-cancel-btn:hover { background: rgba(255,80,80,0.5); }
+
         @keyframes bubbleIn {
             from { opacity: 0; transform: translateY(16px) scale(0.92); }
             to   { opacity: 1; transform: translateY(0) scale(1); }
@@ -2613,7 +2646,7 @@
                     <span class="enc-rule-icon">🎰</span>
                     <div class="enc-rule-heading">Sistem Draw Level — Makin Sering Draw, Makin Bagus Kartunya!</div>
                     <div class="enc-rule-text">
-                        Setiap pemain punya <strong>Draw Level</strong> (Level 1–10) yang naik otomatis setiap <strong>3 kali Draw Card</strong>. Semakin tinggi levelmu, semakin besar peluang mendapat kartu langka! Level 10 adalah level tertinggi — 👑 Mythic dominan!<br><br>
+                        Setiap pemain punya <strong>Draw Level</strong> (Level 1–10) yang naik otomatis setiap <strong>1 kali Draw Card</strong>. Semakin tinggi levelmu, semakin besar peluang mendapat kartu langka! Level 10 adalah level tertinggi — 👑 Mythic dominan!<br><br>
                         <strong>🎴 Prioritas Kartu per Level (Lv1–Lv5):</strong>
                     </div>
                     <div style="overflow-x:auto; margin-top:8px;">
@@ -3157,7 +3190,7 @@
                                 <span style="font-weight:bold; font-size:0.9em;">🕹️ Tahap: <strong id="phase-name">1</strong></span>
                             </div>
                             <div id="player-turn-notification" style="display:none; margin-left:15px; padding:8px 15px; background:#4caf50; border:2px solid #2e7d32; border-radius:8px;">
-                                <span style="font-weight:bold; font-size:0.9em;">✅ Pilih kartu di bawah</span>
+                                <span id="player-turn-notification-text" style="font-weight:bold; font-size:0.9em;">✅ Pilih kartu di bawah</span>
                             </div>
                             <div id="player-penalty" style="display:none; margin-left:15px; padding:8px 15px; background:rgba(244,67,54,0.9); border:2px solid #f44336; border-radius:8px;">
                                 <span style="font-weight:bold; font-size:0.9em;" id="penalty-text">⚠️ Anda harus draw card</span>
@@ -3304,14 +3337,24 @@
                 style="margin-top:6px; padding:6px 10px; background:#f0f4ff;
                        border-radius:8px; font-size:0.78em; color:#555; text-align:left;"></div>
             <div id="match-result-rank-change"></div>
-            <button onclick="playSound('button');goToHome()"
-                style="margin-top:10px; width:100%; padding:10px; font-size:0.95em; font-weight:bold;
-                       background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
-                       color:white; border:none; border-radius:10px; cursor:pointer;
-                       box-shadow:0 4px 15px rgba(102,126,234,0.4); transition:transform 0.15s;"
-                onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
-                🎮 Kembali ke Home
-            </button>
+            <div style="display:flex; flex-direction:column; gap:8px; margin-top:10px;">
+                <button id="btn-match-result-watch" onclick="playSound('x');document.getElementById('match-result-modal').classList.remove('active')"
+                    style="display:none; width:100%; padding:10px; font-size:0.95em; font-weight:bold;
+                           background:linear-gradient(135deg,#43a047,#2e7d32);
+                           color:white; border:none; border-radius:10px; cursor:pointer;
+                           box-shadow:0 4px 15px rgba(67,160,71,0.4); transition:transform 0.15s;"
+                    onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                    👀 Lanjut Menonton
+                </button>
+                <button onclick="playSound('button');goToHome()"
+                    style="width:100%; padding:10px; font-size:0.95em; font-weight:bold;
+                           background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+                           color:white; border:none; border-radius:10px; cursor:pointer;
+                           box-shadow:0 4px 15px rgba(102,126,234,0.4); transition:transform 0.15s;"
+                    onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                    🎮 Kembali ke Home
+                </button>
+            </div>
         </div>
     </div>
 
@@ -4297,7 +4340,7 @@
             _customInviteData = null;
             _customRoomId = null;
             _customRoomRole = null;
-            _customRoomSlots = [];
+            _customRoomSlots = {};
             _customPickerSlot = null;
             _pendingCustomJoin = false;
 
@@ -4309,6 +4352,12 @@
             if (_partyKickRef)         { _partyKickRef.off();         _partyKickRef = null; }
             if (_partyGuestRosterRef)  { _partyGuestRosterRef.off();  _partyGuestRosterRef = null; }
             if (_guestPartyStatusRef)  { _guestPartyStatusRef.off();  _guestPartyStatusRef = null; }
+            // Bersihkan listener partyCancelSearch dan hapus node-nya dari Firebase
+            if (currentUser) {
+                const _csRef = db.ref(`users/${currentUser.uid}/partyCancelSearch`);
+                _csRef.off();
+                _csRef.remove().catch(() => {});
+            }
             _partyInviteData = null;
             _partyFriendUid = null;
             _partyFriendName = null;
@@ -4318,6 +4367,8 @@
             _partyQueueSize = null;
             _isPartyGuest = false;
             _partyHostUid = null;
+            _partyHostName = null;
+            _myPartySlot = 2;
             _guestSlot3Uid = null;
             _openPickerSlot = null;
 
@@ -4449,6 +4500,15 @@
                     showPreloadingScreen(false);
                     showHomeButtons();
                     document.getElementById('profile-badge').style.display = 'block';
+                } else if (data.type === 'GAME_OVER') {
+                    // Game sudah selesai saat reconnect — sembunyikan pre-loading screen dulu baru tampilkan hasil
+                    reconnected.value = true;
+                    reconnectAttempts = MAX_RECONNECT_ATTEMPTS;
+                    const _ps = document.getElementById('pre-loading-screen');
+                    _ps.classList.add('hidden');
+                    setTimeout(() => { _ps.style.display = 'none'; }, 500);
+                    ws.onmessage = (ev) => { try { handleServerMessage(JSON.parse(ev.data)); } catch(e) {} };
+                    if (data.players) endGame(data.players);
                 } else {
                     // Pesan lain (misal LOG) tiba sebelum GAME_STATE_UPDATE.
                     // Jangan set currentRoomId dulu — tunggu konfirmasi GAME_STATE_UPDATE
@@ -4506,8 +4566,7 @@
                 ws.send(JSON.stringify({
                     type: 'REJOIN_AS_SPECTATOR',
                     roomId,
-                    userUid: currentUser ? currentUser.uid : (lsGet(LS.USER_UID) || ''),
-                    playerName: currentUser ? (currentUser.displayName || lsGet(LS.PLAYER_NAME) || 'Spectator') : (lsGet(LS.PLAYER_NAME) || 'Spectator'),
+                    userUid: currentUser ? currentUser.uid : (lsGet(LS.USER_UID) || '')
                 }));
             };
 
@@ -4669,8 +4728,8 @@
             }
             // Cleanup custom room invite yang masih pending saat halaman ditutup/refresh
             if (currentUser) {
-                if (_customRoomSlots && _customRoomSlots.length > 0) {
-                    _customRoomSlots.forEach(s => {
+                if (_customRoomSlots && Object.keys(_customRoomSlots).length > 0) {
+                    Object.values(_customRoomSlots).forEach(s => {
                         if (s?.pending && s.uid) db.ref(`users/${s.uid}/customRoomInvite`).remove();
                     });
                 }
@@ -5216,7 +5275,7 @@
         // =============================================
         // WEBSOCKET & GAME STATE
         // =============================================
-        const SERVER_URL = "wss://server-production-e5d7.up.railway.app";
+        const SERVER_URL = "wss://server-card-game-nusantara-production-dc82.up.railway.app";
 
         let ws = null;
         let currentRoomId = null;
@@ -5295,22 +5354,108 @@
                 preScreen.style.display = 'none';
                 document.getElementById('matchmaking-screen').classList.add('active');
                 document.getElementById('profile-badge').style.display = 'block';
+
+                // Tandai bahwa user sudah masuk ke main menu
+                _hasEnteredMain = true;
+
+                // Flush bubble lobby yang tertahan saat user masih di pre-loading screen
+                if (_pendingPartyBubble) {
+                    _pendingPartyBubble = false;
+                    document.getElementById('party-lobby-bubble').style.display = 'flex';
+                }
+                if (_pendingCustomBubble) {
+                    _pendingCustomBubble = false;
+                    document.getElementById('custom-lobby-bubble').style.display = 'flex';
+                }
+
+                // Flush undangan party yang tertahan saat user masih di pre-loading screen.
+                // Delay 1 detik agar UI matchmaking selesai render sebelum popup muncul.
+                if (_pendingInviteBeforePlay) {
+                    const inv = _pendingInviteBeforePlay;
+                    _pendingInviteBeforePlay = null;
+                    setTimeout(() => {
+                        // Validasi ulang: pastikan undangan belum kadaluarsa (> 2 menit)
+                        if (!inv || Date.now() - inv.timestamp > 120000) return;
+                        // Pastikan data masih konsisten (listener bisa sudah reset _partyInviteData ke null)
+                        if (!_partyInviteData) return;
+                        document.getElementById('party-invite-msg').textContent =
+                            `${inv.fromName || 'Seorang teman'} mengajakmu main bareng!`;
+                        document.getElementById('party-invite-popup').style.display = 'flex';
+                    }, 1000);
+                }
+
+                // Flush undangan custom room yang tertahan saat user masih di pre-loading screen.
+                // Delay 1.5 detik (sedikit lebih lama dari party) agar tidak bentrok tampilannya.
+                if (_pendingCustomInviteBeforePlay) {
+                    const cinv = _pendingCustomInviteBeforePlay;
+                    _pendingCustomInviteBeforePlay = null;
+                    setTimeout(() => {
+                        if (!cinv || Date.now() - cinv.ts > 120000) return;
+                        if (!_customInviteData) return;
+                        document.getElementById('custom-invite-msg').textContent =
+                            `${cinv.fromName || 'Seorang teman'} mengundangmu ke custom room!`;
+                        document.getElementById('custom-room-invite-popup').style.display = 'flex';
+                    }, 1500);
+                }
             }, 500);
         }
 
         // =============================================
         // MATCHMAKING
         // =============================================
+        // Helper: restore overflow body sesuai kondisi (game aktif = auto, tidak = hidden)
+        function restoreBodyOverflow() {
+            const gameActive = document.getElementById('game-container')?.classList.contains('active');
+            document.body.style.overflow = gameActive ? 'auto' : '';
+        }
+
+        // Tutup semua halaman/overlay yang mungkin sedang terbuka
+        function closeAllScreens() {
+            const ids = [
+                'profile-screen',
+                'settings-screen',
+                'leaderboard-screen',
+                'view-profile-modal',
+                'ingame-settings-panel',
+                'party-lobby-overlay',
+                'party-invite-popup',
+                'kostum-picker-overlay',
+                'custom-room-overlay',
+                'custom-room-invite-popup',
+                'avatar-picker-overlay',
+                // [FIX] Ensiklopedia, Teman, & Pengembang sebelumnya tidak ditutup saat lawan ditemukan
+                'encyclopedia-screen',
+                'teman-screen',
+                'pengembang-screen',
+            ];
+            ids.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.display = 'none';
+            });
+            // Sembunyikan bubble lobby juga
+            const partyBubble = document.getElementById('party-lobby-bubble');
+            const customBubble = document.getElementById('custom-lobby-bubble');
+            if (partyBubble) partyBubble.style.display = 'none';
+            if (customBubble) customBubble.style.display = 'none';
+            // [FIX] Tutup juga overlay yang pakai classList/display terpisah
+            const _visitProf = document.getElementById('visit-profile-screen');
+            if (_visitProf) _visitProf.classList.remove('active');
+            const _drawLvl = document.getElementById('draw-level-overlay');
+            if (_drawLvl) _drawLvl.classList.remove('active');
+            const _rankInfo = document.getElementById('rank-info-overlay');
+            if (_rankInfo) _rankInfo.style.display = 'none';
+        }
+
         function startMatchmaking() {
             _setPresenceStatus('inQueue');
-            soundEffects.bgMusic.pause();
-            try {
-                soundEffects.bgMusic2.currentTime = 0;
-                soundEffects.bgMusic2.play().catch(() => {});
-            } catch(e) {}
-            DOM.matchmakingScreen.querySelector('#matchmaking-idle').style.display = 'none';
-            DOM.matchmakingScreen.querySelector('#matchmaking-waiting').style.display = 'flex';
-            DOM.matchmakingScreen.style.justifyContent = 'center';
+            // bgMusic tetap jalan saat mencari lawan, bgMusic2 akan diputar saat memasuki pertandingan
+            // Tetap tampilkan matchmaking screen (agar tombol lain masih terlihat)
+            // Sembunyikan hanya bagian waiting, tampilkan floating bar
+            DOM.matchmakingScreen.classList.add('active');
+            DOM.matchmakingScreen.querySelector('#matchmaking-idle').style.display = 'flex';
+            DOM.matchmakingScreen.querySelector('#matchmaking-waiting').style.display = 'none';
+            DOM.matchmakingScreen.style.justifyContent = 'flex-end';
+            showMatchmakingFloatBar();
             startMatchmakingCountdown();
 
             ws = new WebSocket(SERVER_URL);
@@ -5318,13 +5463,48 @@
             ws.onopen = () => {
                 startClientKeepAlive();
                 const playerName = currentNickname || lsGet(LS.NICKNAME) || 'Player ' + Math.floor(Math.random() * 1000);
-                ws.send(JSON.stringify({
-                    type: 'JOIN_MATCHMAKING',
-                    playerName: playerName,
-                    userUid: currentUser ? currentUser.uid : (lsGet(LS.USER_UID) || ''),
-                    partyId: _partyId || undefined,
-                    partySize: _partyQueueSize || undefined
-                }));
+
+                // REJOIN_PARTY_LOBBY hanya untuk reconnect ke WS partyLobby yang sudah ada di server.
+                // Tamu Firebase party (_isPartyGuest=true + _partyQueueSize set dari partySignal)
+                // harus kirim JOIN_MATCHMAKING langsung — server tidak punya partyLobby Firebase di WS,
+                // REJOIN akan dapat PARTY_NOT_FOUND dan tamu kembali ke lobi.
+                //
+                // Tamu reconnect WS: _isPartyGuest=true, _partyQueueSize=null (belum dapat PARTY_QUEUING lagi)
+                // Host/solo: _isPartyGuest=false → JOIN_MATCHMAKING
+                const isReconnectingWsGuest = _isPartyGuest && _partyQueueSize === null && (_partyFirebaseId || _partyId);
+
+                if (isReconnectingWsGuest) {
+                    ws.send(JSON.stringify({
+                        type: 'REJOIN_PARTY_LOBBY',
+                        userUid: currentUser ? currentUser.uid : '',
+                        playerName: playerName
+                    }));
+                } else {
+                    // Solo, host party Firebase, ATAU tamu Firebase (sudah punya _partyId + _partyQueueSize)
+                    ws.send(JSON.stringify({
+                        type: 'JOIN_MATCHMAKING',
+                        playerName: playerName,
+                        userUid: currentUser ? currentUser.uid : (lsGet(LS.USER_UID) || ''),
+                        partyId: _partyId || undefined,
+                        partySize: _partyQueueSize || undefined
+                    }));
+                }
+
+                // FIX race condition: kirim partySignal ke tamu SETELAH host terhubung ke server.
+                // Delay 600ms memberi waktu tamu memproses partyCancelSearch dan memasang ulang
+                // _startPartySignalListener sebelum sinyal baru ditulis — menghindari sinyal terlewat.
+                if (_pendingPartySignals) {
+                    const { uids, partyId, partySize } = _pendingPartySignals;
+                    _pendingPartySignals = null;
+                    setTimeout(async () => {
+                        for (const friendUid of uids) {
+                            const sigRef = db.ref(`users/${friendUid}/partySignal`);
+                            await sigRef.remove().catch(() => {});
+                            await sigRef.set({ partyId, partySize }).catch(() => {});
+                            sigRef.onDisconnect().remove();
+                        }
+                    }, 600);
+                }
             };
 
             ws.onmessage = (event) => {
@@ -5355,32 +5535,118 @@
         }
 
         function cancelMatchmaking() {
-            _setPresenceStatus('online');
             stopMatchmakingCountdown();
-            // Beritahu tamu party (jika ada) bahwa host membatalkan antrian
-            if (currentUser && (_partyFriendUid || _partyFriend2Uid)) {
-                if (_partyFriendUid)  db.ref(`users/${_partyFriendUid}/partyKick`).set({ disbanded: true });
-                if (_partyFriend2Uid) db.ref(`users/${_partyFriend2Uid}/partyKick`).set({ disbanded: true });
+            hideMatchmakingFloatBar();
+
+            // Jika sedang dalam party, beritahu semua anggota untuk batal cari lawan
+            // HARUS dilakukan SEBELUM ws.close() agar LEAVE_QUEUE masih terkirim
+            if ((_partyId || _partyFirebaseId) && currentUser) {
+                const cancellerName = currentNickname || 'Pemain';
+                // Gunakan _partyFirebaseId (ID roster Firebase asli, bukan sharedPartyId qp_xxx)
+                const firebasePartyId = _partyFirebaseId || _partyId;
+                // Beritahu anggota lain via Firebase agar mereka juga berhenti mencari
+                db.ref(`partyRoster/${firebasePartyId}`).once('value').then(snap => {
+                    if (!snap.exists()) return;
+                    snap.forEach(child => {
+                        const uid = child.key;
+                        // Entry 'host' menyimpan UID host sebagai value-nya
+                        const targetUid = uid === 'host' ? child.val() : uid;
+                        if (!targetUid || targetUid === currentUser.uid) return;
+                        db.ref(`users/${targetUid}/partyCancelSearch`).set({
+                            cancelledBy: cancellerName,
+                            ts: Date.now()
+                        }).catch(() => {});
+                        // PATCH C: Hapus partySignal lama agar tamu tidak salah masuk queue
+                        // dengan partyId lama jika Firebase lambat mengirim sinyal sebelumnya
+                        db.ref(`users/${targetUid}/partySignal`).remove().catch(() => {});
+                    });
+                }).catch(() => {});
             }
-            _partyId = null; // reset party state
-            _partyQueueSize = null;
+
+            // Hentikan antrian di server
             if (ws) {
                 try { ws.send(JSON.stringify({ type: 'LEAVE_QUEUE' })); } catch(e) {}
                 ws.onclose = null; ws.onerror = null;
                 ws.close();
                 ws = null;
             }
+
+            soundEffects.bgMusic2.pause();
+            soundEffects.bgMusic2.currentTime = 0;
+            soundEffects.bgMusic.play().catch(() => {});
+
+            // Jika sedang dalam party → kembalikan ke lobi party (party tidak dibubarkan)
+            if ((_partyId || _partyFirebaseId || _isPartyGuest) && currentUser) {
+                _partyQueueSize = null;
+                // Matikan listener partyCancelSearch agar tidak re-trigger setelah cancel sendiri
+                const _selfCsRef = db.ref(`users/${currentUser.uid}/partyCancelSearch`);
+                _selfCsRef.off();
+                _selfCsRef.remove().catch(() => {});
+                // Kembalikan _partyId ke Firebase ID asli agar lobi party bisa berfungsi
+                if (_partyFirebaseId) _partyId = _partyFirebaseId;
+                _setPresenceStatus('inLobby');
+                // FIX: Tamu punya state lengkap (_partyHostUid, _partyHostName, _isPartyGuest)
+                // karena kita tidak reset saat masuk queue — render ulang lobi tamu dengan benar
+                if (_isPartyGuest && _partyHostUid && _partyHostName) {
+                    _showGuestPartyLobby(_partyHostUid, _partyHostName, _myPartySlot);
+                } else {
+                    document.getElementById('party-lobby-overlay').style.display = 'flex';
+                }
+                // PATCH A: Pasang ulang listener partySignal agar tamu bisa merespons
+                // jika host menekan Mulai lagi
+                if (_isPartyGuest && _partyFirebaseId) {
+                    _startPartySignalListener(_partyFirebaseId);
+                }
+                return;
+            }
+
+            // Tidak ada party → kembali ke matchmaking-idle biasa
+            _setPresenceStatus('online');
+            _partyQueueSize = null;
+            _partyFirebaseId = null;
+            DOM.matchmakingScreen.classList.add('active');
             DOM.matchmakingScreen.querySelector('#matchmaking-idle').style.display = 'flex';
             DOM.matchmakingScreen.querySelector('#matchmaking-waiting').style.display = 'none';
             DOM.matchmakingScreen.querySelector('#match-starting').style.display = 'none';
             DOM.matchmakingScreen.style.justifyContent = 'flex-end';
-            soundEffects.bgMusic2.pause();
-            soundEffects.bgMusic2.currentTime = 0;
-            soundEffects.bgMusic.play().catch(() => {});
         }
 
         function handleServerMessage(data) {
             switch (data.type) {
+                case 'PARTY_SEARCH_CANCELLED': {
+                    // Salah satu anggota party membatalkan dari sisi server (via LEAVE_QUEUE)
+                    // Hentikan pencarian dan kembalikan ke lobi party
+                    hideMatchmakingFloatBar();
+                    stopMatchmakingCountdown();
+                    if (ws) {
+                        try { ws.send(JSON.stringify({ type: 'LEAVE_QUEUE' })); } catch(e) {}
+                        ws.onclose = null; ws.onerror = null;
+                        ws.close();
+                        ws = null;
+                    }
+                    soundEffects.bgMusic2.pause();
+                    soundEffects.bgMusic2.currentTime = 0;
+                    soundEffects.bgMusic.play().catch(() => {});
+                    _partyQueueSize = null;
+                    // Kembalikan _partyId ke Firebase ID asli agar lobi berfungsi
+                    if (_partyFirebaseId) _partyId = _partyFirebaseId;
+                    _setPresenceStatus('inLobby');
+                    // Jika tamu: render ulang tampilan lobi guest dengan data yang tersimpan
+                    if (_isPartyGuest && _partyHostUid && _partyHostName) {
+                        _showGuestPartyLobby(_partyHostUid, _partyHostName, _myPartySlot);
+                    } else {
+                        document.getElementById('party-lobby-overlay').style.display = 'flex';
+                    }
+                    const cancelName = data.cancelledByName || 'Salah satu pemain';
+                    showToast(`ℹ️ ${cancelName} membatalkan pencarian lawan.`, 'info');
+                    // PATCH A: Pasang ulang listener partySignal agar tamu bisa merespons
+                    // jika host menekan Mulai lagi di siklus berikutnya
+                    if (_isPartyGuest && _partyFirebaseId) {
+                        _startPartySignalListener(_partyFirebaseId);
+                    }
+                    break;
+                }
+
                 case 'QUEUE_STATUS':
                     DOM.matchmakingScreen.querySelector('#queue-status').textContent = data.message;
                     break;
@@ -5392,6 +5658,12 @@
                     break;
 
                 case 'PROVINCES_SELECTED': {
+                    hideMatchmakingFloatBar();
+                    closeAllScreens();
+                    DOM.matchmakingScreen.classList.add('active');
+                    // Sembunyikan idle (tombol RANKED dll) saat lawan ditemukan
+                    DOM.matchmakingScreen.querySelector('#matchmaking-idle').style.display = 'none';
+                    DOM.matchmakingScreen.querySelector('#matchmaking-waiting').style.display = 'none';
                     const provinces = data.provinces || [];
                     const mandatory = data.mandatory || 'Bangka Belitung';
                     const grid = document.getElementById('prov-grid');
@@ -5415,6 +5687,7 @@
                         _resetCustomRoomOverlay();
                         document.getElementById('custom-room-overlay').style.display = 'none';
                         _stopCustomPresenceListener();
+            _stopCustomDeclineListener();
                         document.getElementById('custom-friend-picker').style.display = 'none';
                         DOM.matchmakingScreen.classList.add('active');
                         const _idle = DOM.matchmakingScreen.querySelector('#matchmaking-idle');
@@ -5441,18 +5714,20 @@
                     if (_customRoomId) {
                         // Beritahu server agar currentCustomRoomId di socket guest ikut di-clear
                         try { ws.send(JSON.stringify({ type: 'LEAVE_CUSTOM_ROOM', userUid: currentUser ? currentUser.uid : '' })); } catch(_) {}
-                        _customRoomSlots.forEach(s => {
+                        Object.values(_customRoomSlots).forEach(s => {
                             if (s?.pending && s.uid) db.ref(`users/${s.uid}/customRoomInvite`).remove().catch(() => {});
                         });
                         _customRoomId = null;
                         _customRoomRole = null;
-                        _customRoomSlots = [];
+                        _customRoomSlots = {};
                         _customPickerSlot = null;
                         _pendingCustomJoin = false;
                         _isCustomRoomCreator = false;
+                        _pendingBotAdd = false;
                         _resetCustomRoomOverlay();
                         document.getElementById('custom-room-overlay').style.display = 'none';
                         _stopCustomPresenceListener();
+            _stopCustomDeclineListener();
                         document.getElementById('custom-friend-picker').style.display = 'none';
                         _setPresenceStatus('online');
                         _startCustomRoomInviteListener();
@@ -5466,13 +5741,15 @@
                         try { ws.send(JSON.stringify({ type: 'LEAVE_CUSTOM_ROOM', userUid: currentUser ? currentUser.uid : '' })); } catch(_) {}
                         _customRoomId = null;
                         _customRoomRole = null;
-                        _customRoomSlots = [];
+                        _customRoomSlots = {};
                         _customPickerSlot = null;
                         _pendingCustomJoin = false;
                         _isCustomRoomCreator = false;
+                        _pendingBotAdd = false;
                         _resetCustomRoomOverlay();
                         document.getElementById('custom-room-overlay').style.display = 'none';
                         _stopCustomPresenceListener();
+            _stopCustomDeclineListener();
                         document.getElementById('custom-friend-picker').style.display = 'none';
                         _setPresenceStatus('online');
                         _startCustomRoomInviteListener();
@@ -5480,8 +5757,35 @@
                     }
                     break;
 
+                case 'INVITE_DECLINED': {
+                    // Host mendapat notifikasi bahwa pemain yang diundang menolak
+                    const declinedName = data.toName || 'Pemain';
+                    showToast(`❌ ${declinedName} menolak undanganmu.`, 'warning');
+                    // Hapus slot pending yang cocok agar tidak stuck "menunggu..."
+                    Object.keys(_customRoomSlots).forEach(slot => {
+                        if (_customRoomSlots[slot]?.pending &&
+                            _customRoomSlots[slot]?.name === declinedName) {
+                            delete _customRoomSlots[slot];
+                        }
+                    });
+                    // Jika tidak ada yang cocok berdasarkan nama (bisa berbeda), hapus semua pending
+                    const stillHasPending = Object.values(_customRoomSlots).some(s => s?.pending);
+                    if (stillHasPending) {
+                        Object.keys(_customRoomSlots).forEach(slot => {
+                            if (_customRoomSlots[slot]?.pending) delete _customRoomSlots[slot];
+                        });
+                    }
+                    _renderCustomRoomLobby();
+                    break;
+                }
+
                 case 'CUSTOM_ROOM_CREATED':
                     _customRoomId = data.roomId;
+                    // Pastikan tombol Mulai terlihat (reset dari sesi sebelumnya)
+                    { const _bs = document.getElementById('btn-custom-start');
+                      if (_bs) { _bs.style.display = ''; _bs.disabled = true; _bs.textContent = '▶ Mulai'; } }
+                    // Mulai listener decline agar host tahu saat undangan ditolak
+                    _startCustomDeclineListener();
                     // Show lobby
                     document.getElementById('custom-room-overlay').style.display = 'flex';
                     _renderCustomRoomLobby();
@@ -5499,6 +5803,8 @@
                     break;
 
                 case 'GAME_STARTED':
+                    // [FIX] Tutup semua halaman (ensiklopedia, teman, profil, dll) saat game dimulai
+                    closeAllScreens();
                     _setPresenceStatus('inGame');
                     // Handle custom room / spectator flags
                     _isCustomRoom = !!data.isCustomRoom;
@@ -5508,6 +5814,7 @@
                     _resetCustomRoomOverlay();
                     document.getElementById('custom-room-overlay').style.display = 'none';
                     _stopCustomPresenceListener();
+            _stopCustomDeclineListener();
                     document.getElementById('custom-friend-picker').style.display = 'none';
                     // Sembunyikan match-starting (provinces preview) jika ditampilkan dari custom room
                     const _msEl = document.getElementById('match-starting');
@@ -5578,6 +5885,8 @@
                             if (_deckDiv) _deckDiv.innerHTML = '';
                         }
                         updateGameUI(data.state);
+                        // Untuk spectator: pastikan tombol "Hasil Pertandingan" langsung muncul
+                        if (_isSpectator) updateButtons();
                         startPingMeasurement();
                         addLog(_isSpectator ? '📺 Kamu menonton pertandingan ini.' : '🎮 Game dimulai! Selamat bermain!');
                         // Pastikan bgMusic2 jalan untuk semua pemain (host, guest, party, custom room)
@@ -5669,6 +5978,17 @@
 
                 case 'ERROR':
                     showToast('❌ ' + data.message, 'error');
+                    // Reset flag pending bot jika error dari ADD_BOT_SLOT
+                    if (_pendingBotAdd) {
+                        _pendingBotAdd = false;
+                        // Hapus optimistic slot yang tadi ditambahkan (pending: true, isBot: true)
+                        Object.keys(_customRoomSlots).forEach(slot => {
+                            if (_customRoomSlots[slot]?.isBot && _customRoomSlots[slot]?.pending) {
+                                delete _customRoomSlots[slot];
+                            }
+                        });
+                        _renderCustomRoomLobby();
+                    }
                     // Reset tombol Mulai jika gagal memulai Custom Room
                     { const _btnS = document.getElementById('btn-custom-start');
                       if (_btnS && _btnS.textContent.includes('Memulai')) {
@@ -5680,10 +6000,11 @@
                         _pendingCustomJoin = false;
                         _customRoomId = null;
                         _customRoomRole = null;
-                        _customRoomSlots = [];
+                        _customRoomSlots = {};
                         _customPickerSlot = null;
                         document.getElementById('custom-room-overlay').style.display = 'none';
                         _stopCustomPresenceListener();
+            _stopCustomDeclineListener();
                         document.getElementById('custom-friend-picker').style.display = 'none';
                     }
                     break;
@@ -5694,10 +6015,30 @@
                     }
                     break;
 
+                case 'PARTY_NOT_FOUND':
+                    // Server tidak punya party queuing untuk tamu ini — kembali ke lobi.
+                    // JANGAN tutup ws: koneksi masih valid, tidak perlu disconnect.
+                    // (ws.close() di sini adalah penyebab log "Disconnected: re7 / Hidup Damai" 0ms)
+                    hideMatchmakingFloatBar();
+                    stopMatchmakingCountdown();
+                    _partyQueueSize = null;
+                    if (_partyFirebaseId) _partyId = _partyFirebaseId;
+                    _setPresenceStatus('inLobby');
+                    if (_isPartyGuest && _partyHostUid && _partyHostName) {
+                        _showGuestPartyLobby(_partyHostUid, _partyHostName, _myPartySlot);
+                    } else {
+                        document.getElementById('party-lobby-overlay').style.display = 'flex';
+                    }
+                    if (_isPartyGuest && _partyFirebaseId) {
+                        _startPartySignalListener(_partyFirebaseId);
+                    }
+                    break;
+
                 // ── WebSocket Party (server-driven party queue) ─────────────
                 case 'PARTY_QUEUING': {
                     // Server memerintahkan semua anggota party untuk segera masuk antrian
                     // Berlaku saat party lobby berbasis WebSocket digunakan (bukan Firebase)
+                    // _partyFirebaseId sudah diset sebelumnya — jangan overwrite
                     _partyId = data.sharedPartyId;
                     _partyQueueSize = data.partySize || 2;
                     // Kirim JOIN_MATCHMAKING pada koneksi yang sudah ada
@@ -5711,10 +6052,8 @@
                             partySize: data.partySize
                         }));
                     }
-                    // Tampilkan layar matchmaking (menunggu match)
-                    DOM.matchmakingScreen.classList.add('active');
-                    DOM.matchmakingScreen.querySelector('#matchmaking-idle').style.display = 'none';
-                    DOM.matchmakingScreen.querySelector('#matchmaking-waiting').style.display = 'flex';
+                    // Tampilkan floating bar (menunggu match sebagai tamu party)
+                    showMatchmakingFloatBar();
                     DOM.matchmakingScreen.querySelector('#match-starting').style.display = 'none';
                     DOM.matchmakingScreen.querySelector('#queue-status').textContent = 'Party siap — menunggu lawan...';
                     break;
@@ -5722,9 +6061,70 @@
             }
         }
 
+        let _prevPhase = null;
+        let _prevRound = null;
+        let _prevHasPlayed = {};
+        let _prevMustForcePick = {};
+        let _prevMustDraw = {};
+        let _prevHands = {};
+        let _prevFreed = {};
         function updateGameUI(newState) {
+            const prevPhase = _prevPhase;
             gameState = newState;
-            playCardInProgress = false; // state sudah diperbarui, boleh kirim aksi lagi
+            _prevPhase = newState.phase;
+            _prevRound = newState.round;
+
+            if (newState.players) {
+                // Deteksi pemain yang baru saja menjatuhkan kartu (hasPlayed baru jadi true)
+                // Skip jika sebelumnya mustForcePick (berarti Mengambil kartu, bukan menjatuhkan)
+                newState.players.forEach(p => {
+                    if (p.hasPlayed && !_prevHasPlayed[p.id] && !_prevMustForcePick[p.id] && !_prevMustDraw[p.id]) {
+                        const prevHand = _prevHands[p.id] || [];
+                        const newHandIds = new Set((p.hand || []).map(c => c.id));
+                        const played = prevHand.find(c => !newHandIds.has(c.id));
+                        const cardName = played ? played.name : '';
+                        showNotification(`🎴 ${_shortName(p.name)} menjatuhkan kartu${cardName ? ' ' + cardName : ''}`);
+                    }
+                });
+                // Simpan state sekarang
+                // Deteksi pemain yang baru dibebaskan dari force card
+                const freedPlayers = newState.players.filter(p => p.freed && !_prevFreed[p.id] && !p.winner).map(p => _shortName(p.name));
+                if (freedPlayers.length > 0) {
+                    showNotification(`✅ ${freedPlayers.join(' dan ')} dibebaskan dari force card`);
+                }
+
+                _prevHasPlayed = {};
+                _prevMustForcePick = {};
+                _prevMustDraw = {};
+                _prevHands = {};
+                _prevFreed = {};
+                newState.players.forEach(p => {
+                    _prevHasPlayed[p.id] = p.hasPlayed;
+                    _prevMustForcePick[p.id] = p.mustForcePick;
+                    _prevMustDraw[p.id] = p.mustDraw;
+                    _prevHands[p.id] = p.hand ? [...p.hand] : [];
+                    _prevFreed[p.id] = p.freed;
+                });
+
+                // Saat baru masuk phase 2, tampilkan siapa yang terkena draw card
+                if (prevPhase === 1 && newState.phase === 2) {
+                    const drawPlayers = newState.players.filter(p => p.mustDraw && !p.winner).map(p => _shortName(p.name));
+                    if (drawPlayers.length > 0) {
+                        showNotification(`🎴 ${drawPlayers.join(' dan ')} terkena draw card`);
+                    }
+                }
+
+                // Reset saat ronde baru
+                if (_prevRound !== newState.round) {
+                    _prevHasPlayed = {};
+                    _prevMustForcePick = {};
+                    _prevMustDraw = {};
+                    _prevHands = {};
+                    _prevFreed = {};
+                }
+            }
+
+            playCardInProgress = false;
             updateUI();
         }
 
@@ -5835,6 +6235,10 @@
                     deckDiv.appendChild(section);
                 });
             }
+
+            // Update tombol surrender/hasil setiap kali tampilan dirender ulang
+            // Ini memastikan tombol "Hasil Pertandingan" muncul saat gameOver = true
+            updateButtons();
         }
 
         // =============================================
@@ -5950,8 +6354,10 @@
             logContainer.appendChild(logEntry);
             logContainer.scrollTop = logContainer.scrollHeight;
 
-            const isImportant = message.includes('MENANG') || message.includes('dibebaskan') ||
-                message.includes('Force Pick') || message.includes('harus ambil');
+
+            const isImportant = message.includes('MENANG') ||
+                message.includes('mendapat giliran Tahap 1') ||
+                (message.includes('Mengambil kartu') && !message.includes('AUTO'));
             if (isImportant) showNotification(message);
         }
 
@@ -5999,22 +6405,66 @@
             }
         }
 
-        function showNotification(message) {
+        const _notifQueue = [];
+        let _notifBusy = false;
+        let _notifCurrent = null;
+        let _notifDismissTimer = null;
+        function _dismissCurrent(then) {
+            if (!_notifCurrent) { then && then(); return; }
+            clearTimeout(_notifDismissTimer);
+            _notifCurrent.style.animation = 'slideOutRight 0.3s ease-out';
+            setTimeout(() => {
+                if (_notifCurrent) { _notifCurrent.remove(); _notifCurrent = null; }
+                _notifBusy = false;
+                then && then();
+            }, 300);
+        }
+        function _processNotifQueue() {
+            if (_notifBusy || _notifQueue.length === 0) return;
+            _notifBusy = true;
+            const message = _notifQueue.shift();
             const n = document.createElement('div');
             n.className = 'game-notification';
             n.textContent = message;
+            const bg = message.includes('DIBEBASKAN') || message.includes('MENANG') || message.includes('Tahap 1')
+                ? 'linear-gradient(135deg,#4caf50 0%,#2e7d32 100%)'
+                : message.includes('Mengambil')
+                ? 'linear-gradient(135deg,#f57c00 0%,#e65100 100%)'
+                : 'linear-gradient(135deg,#667eea 0%,#764ba2 100%)';
             n.style.cssText = `
-                position:fixed; top:20px; right:20px;
-                background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
-                color:white; padding:15px 25px; border-radius:10px;
+                position:fixed; right:20px; top:20px;
+                background:${bg};
+                color:white; padding:12px 20px; border-radius:10px;
                 box-shadow:0 4px 15px rgba(0,0,0,0.3); z-index:10000;
-                font-weight:bold; animation:slideInRight 0.3s ease-out; max-width:300px;
+                font-weight:bold; animation:slideInRight 0.3s ease-out;
+                max-width:300px; font-size:0.9em;
             `;
             document.body.appendChild(n);
-            setTimeout(() => {
-                n.style.animation = 'slideOutRight 0.3s ease-out';
-                setTimeout(() => n.remove(), 300);
-            }, 3000);
+            _notifCurrent = n;
+
+            // Setelah 1 detik: jika ada antrian, langsung ganti; jika tidak, tunggu hingga 2 detik
+            _notifDismissTimer = setTimeout(() => {
+                if (_notifQueue.length > 0) {
+                    _dismissCurrent(_processNotifQueue);
+                } else {
+                    // Tidak ada antrian — tunggu maksimal 1 detik lagi (total 2 detik)
+                    _notifDismissTimer = setTimeout(() => {
+                        _dismissCurrent(_processNotifQueue);
+                    }, 1000);
+                }
+            }, 1000);
+        }
+        function _shortName(name) {
+            return name.length > 12 ? name.slice(0, 12) + '...' : name;
+        }
+        function showNotification(message) {
+            _notifQueue.push(message);
+            if (_notifBusy && _notifCurrent) {
+                // Ada notifikasi yang sedang "menunggu" — langsung ganti
+                _dismissCurrent(_processNotifQueue);
+            } else {
+                _processNotifQueue();
+            }
         }
 
         // =============================================
@@ -6252,6 +6702,9 @@
             lsClear();
             currentRoomId = null; // Cegah beforeunload menyimpan ulang room yang sudah selesai
 
+            // Tandai gameState sebagai selesai agar updateButtons() bisa mendeteksi untuk spectator
+            if (gameState) gameState.gameOver = true;
+
             // Tutup surrender-choice & match-result modal jika masih terbuka
             document.getElementById('surrender-choice-modal').classList.remove('active');
             document.getElementById('match-result-modal').classList.remove('active');
@@ -6341,6 +6794,10 @@
                     }
                 }
             }
+
+            // Perbarui tombol: untuk spectator, ini akan menampilkan "Hasil Pertandingan"
+            // (gameState.gameOver sudah di-set true di atas)
+            updateButtons();
         }
 
         // =============================================
@@ -6399,6 +6856,13 @@
             `;
 
             document.getElementById('match-result-modal').classList.add('active');
+
+            // Tampilkan tombol "Lanjut Menonton" jika pertandingan masih berlangsung
+            // (spectator atau pemain yang sudah kalah ingin tetap menonton)
+            const btnWatch = document.getElementById('btn-match-result-watch');
+            if (btnWatch) {
+                btnWatch.style.display = (!gameState.gameOver) ? 'block' : 'none';
+            }
 
             // Tampilkan rank change jika rank pemain sudah ditentukan (skip untuk Custom Room)
             const rcContainer = document.getElementById('match-result-rank-change');
@@ -6525,7 +6989,6 @@
             // Stop ping measurement
             stopPingMeasurement();
 
-            const _wasSpectator = _isSpectator; // simpan sebelum di-reset
             // Reset flag untuk pertandingan berikutnya
             hasGameOverSaved = false;
             pendingClientSaveRank = null; // reset untuk pertandingan berikutnya
@@ -6538,21 +7001,82 @@
             _customInviteData = null;
             _customRoomId = null;
             _customRoomRole = null;
-            _customRoomSlots = [];
+            _customRoomSlots = {};
             _customPickerSlot = null;
             _pendingCustomJoin = false;
+            _isCustomRoomCreator = false;  // [FIX] reset agar sesi berikutnya tidak salah identifikasi host
+            _pendingBotAdd = false;        // [FIX] reset agar tombol bot tidak stuck
+            _pendingCustomInviteBeforePlay = null; // [FIX] bersihkan undangan yang tertahan jika ada
+            // [FIX] Safety net: pastikan custom room overlay & picker tertutup
+            // (seharusnya sudah ditutup oleh GAME_STARTED, tapi jaga-jaga edge case)
+            _resetCustomRoomOverlay();
+            const _crOverlay = document.getElementById("custom-room-overlay");
+            if (_crOverlay) _crOverlay.style.display = "none";
+            _stopCustomPresenceListener();
+            _stopCustomDeclineListener();
+            const _cfPicker = document.getElementById("custom-friend-picker");
+            if (_cfPicker) _cfPicker.style.display = "none";
+            const _clBubble = document.getElementById("custom-lobby-bubble");
+            if (_clBubble) _clBubble.style.display = "none";
 
             // Bersihkan state party (listener undangan masuk tetap aktif di home screen)
             // _partyStatusRef/_partyStatus2Ref adalah listener respons invite yang kamu kirim — tidak perlu aktif saat di home
             if (_partyStatusRef)  { _partyStatusRef.off();  _partyStatusRef  = null; }
             if (_partyStatus2Ref) { _partyStatus2Ref.off(); _partyStatus2Ref = null; }
+            if (_partySignalRef)  { _partySignalRef.off();  _partySignalRef  = null; }
+            if (_partyKickRef)    { _partyKickRef.off();    _partyKickRef    = null; }
+            if (_partyGuestRosterRef) { _partyGuestRosterRef.off(); _partyGuestRosterRef = null; }
+            if (_guestPartyStatusRef) { _guestPartyStatusRef.off(); _guestPartyStatusRef = null; }
+            // [FIX HOST] _partyRosterRef (listener roster sisi host) juga harus dimatikan —
+            // sebelumnya tidak di-cleanup di goToHome, menyebabkan listener lama bocor
+            // ke sesi berikutnya dan bisa trigger slot reset secara tidak sengaja.
+            if (_partyRosterRef)  { _partyRosterRef.off();  _partyRosterRef  = null; }
+
+            // [FIX HOST] Simpan UID teman & partyId SEBELUM di-null,
+            // agar bisa dipakai untuk cleanup Firebase di bawah.
+            const _savedFriendUid   = _partyFriendUid;
+            const _savedFriend2Uid  = _partyFriend2Uid;
+            const _savedFirebaseId  = _partyFirebaseId;
+
             _partyInviteData  = null;
             _partyFriendUid   = null; _partyFriendName  = null;
             _partyFriend2Uid  = null; _partyFriend2Name = null;
             _partyQueueSize   = null;
             _partyId          = null;
+            _partyFirebaseId  = null;
+            // Reset state tamu agar saat buka Ranked lagi tidak tampil sebagai guest lobi
+            _isPartyGuest     = false;
+            _partyHostUid     = null;
+            _partyHostName    = null;
+            _myPartySlot      = 2;
             _stopPartyPresenceListener();
             _stopCustomPresenceListener();
+            _stopCustomDeclineListener();
+
+            // [FIX GUEST] Bersihkan Firebase party nodes agar tidak tersisa sebagai state stale
+            // saat player kembali ke home setelah pertandingan selesai/menyerah.
+            // Tanpa ini, node lama (partySignal, partyKick, partyCancelSearch) bisa
+            // terbaca oleh listener baru saat tamu membuka Ranked lagi → tampil sebagai tamu.
+            // [FIX HOST] Bersihkan juga Firebase nodes sisi host: partyRoster, partyStatus,
+            // dan partyInvite ke teman — agar saat host buka Ranked lagi, tidak ada data
+            // lama yang membuat tamu mengira party sebelumnya masih aktif.
+            if (currentUser) {
+                // Nodes bersama (guest & host)
+                db.ref(`users/${currentUser.uid}/partySignal`).off();
+                db.ref(`users/${currentUser.uid}/partySignal`).remove().catch(() => {});
+                db.ref(`users/${currentUser.uid}/partyCancelSearch`).off();
+                db.ref(`users/${currentUser.uid}/partyCancelSearch`).remove().catch(() => {});
+                db.ref(`users/${currentUser.uid}/partyKick`).off();
+                db.ref(`users/${currentUser.uid}/partyKick`).remove().catch(() => {});
+                // Nodes khusus host: hapus partyStatus & partyRoster lama
+                db.ref(`users/${currentUser.uid}/partyStatus`).remove().catch(() => {});
+                if (_savedFirebaseId) {
+                    db.ref(`partyRoster/${_savedFirebaseId}`).remove().catch(() => {});
+                }
+                // Hapus partyInvite yang mungkin masih terkirim ke teman-teman
+                if (_savedFriendUid)  db.ref(`users/${_savedFriendUid}/partyInvite`).remove().catch(() => {});
+                if (_savedFriend2Uid) db.ref(`users/${_savedFriend2Uid}/partyInvite`).remove().catch(() => {});
+            }
 
             // Bersihkan semua timer dan handler force pick agar tidak bocor ke pertandingan berikutnya
             stopForcePickHeartbeat();
@@ -6609,7 +7133,7 @@
             if (_ws) { _ws.onmessage = null; _ws.onclose = null; _ws.onerror = null; }
             _endGameShown = false; // reset untuk pertandingan berikutnya
             if (_ws && _ws.readyState === WebSocket.OPEN && _roomId) {
-                try { _ws.send(JSON.stringify({ type: 'LEAVE_MATCH', roomId: _roomId, isSpectator: _wasSpectator })); } catch(e) {}
+                try { _ws.send(JSON.stringify({ type: 'LEAVE_MATCH', roomId: _roomId, isSpectator: !!_isSpectator })); } catch(e) {}
                 const _closeDelay = _pendingWinSave ? 5000 : 200;
                 setTimeout(() => { try { _ws.close(); } catch(e) {} }, _closeDelay);
             } else if (_ws) {
@@ -6643,6 +7167,15 @@
             preScreen.classList.remove('hidden');
             DOM.matchmakingScreen.classList.add('active');
             document.getElementById('profile-badge').style.display = 'block';
+
+            // [FIX] Reset _isCustomRoomCreator agar tidak tersisa dari sesi lama
+            _isCustomRoomCreator = false;
+                        _pendingBotAdd = false;
+            // [FIX] Restart listener undangan custom room — setelah game selesai listener
+            // sudah tidak aktif, tanpa ini host tidak bisa menerima undangan custom room baru
+            if (currentUser) {
+                _startCustomRoomInviteListener();
+            }
         }
 
         // =============================================
@@ -6695,11 +7228,14 @@
             // Turn notification
             const notification = document.getElementById('player-turn-notification');
             const hasMatchingCard = player.hand.some(c => c.province === gameState.currentProvince);
+            const notifText = document.getElementById('player-turn-notification-text');
             if (gameState.forcePickProcessing || player.mustForcePick) {
                 notification.style.display = 'none';
             } else if (gameState.phase === 1 && gameState.phase1Player === player.id && !player.hasPlayed) {
+                notifText.textContent = '✅ Pilih Bebas kartu di bawah';
                 notification.style.display = 'block';
             } else if (gameState.phase === 2 && !player.hasPlayed && !player.mustDraw && !player.mustForcePick && hasMatchingCard) {
+                notifText.textContent = '✅ Pilih kartu di bawah';
                 notification.style.display = 'block';
             } else {
                 notification.style.display = 'none';
@@ -6941,13 +7477,25 @@
         }
 
         function updateButtons() {
-            if (!gameState || !myPlayerId) return;
-            const player = gameState.players.find(p => p.id === myPlayerId);
-            if (!player) return;
-
             const btnDraw       = document.getElementById('btn-draw');
             const btnSurrender  = document.getElementById('btn-surrender');
             const btnShowResult = document.getElementById('btn-show-result');
+
+            // --- Mode Spectator ---
+            // myPlayerId = null untuk spectator, tapi tombol hasil tetap harus dikelola
+            if (_isSpectator || !myPlayerId) {
+                // Surrender tidak relevan — pastikan selalu tersembunyi
+                if (btnSurrender)  { btnSurrender.style.display  = 'none'; }
+                // Tombol "Hasil Pertandingan" selalu tampil untuk penonton
+                // agar kapanpun bisa melihat skor sementara atau pulang ke home
+                if (btnShowResult) { btnShowResult.style.display = 'inline-block'; }
+                return;
+            }
+
+            // --- Mode Pemain Biasa ---
+            if (!gameState) return;
+            const player = gameState.players.find(p => p.id === myPlayerId);
+            if (!player) return;
 
             btnDraw.disabled = !player.mustDraw || player.hasPlayed;
             btnDraw.onclick  = player.mustDraw ? playerDrawCard : null;
@@ -7031,7 +7579,7 @@
 
         function hideEncyclopedia() {
             document.getElementById('encyclopedia-screen').style.display = 'none';
-            document.body.style.overflow = '';
+            restoreBodyOverflow();
         }
 
         // =============================================
@@ -7046,7 +7594,7 @@
 
         function hideProfileScreen() {
             document.getElementById('profile-screen').style.display = 'none';
-            document.body.style.overflow = '';
+            restoreBodyOverflow();
             detachProfileListeners(); // lepas listener saat tutup
         }
 
@@ -7058,7 +7606,7 @@
 
         function hideTemanScreen() {
             document.getElementById('teman-screen').style.display = 'none';
-            document.body.style.overflow = '';
+            restoreBodyOverflow();
         }
 
         function switchProfileTab(tab) {
@@ -7201,7 +7749,7 @@
         // PROVINCE TOOLTIP FEATURE
         // =============================================
         let _showProvinceTooltip    = lsGet(LS.PROVINCE_TOOLTIP)    === '1'; // default: off
-        let _showDeckProvinceLabel  = lsGet(LS.DECK_PROVINCE_LABEL) !== '0'; // default: on
+        let _showDeckProvinceLabel  = lsGet(LS.DECK_PROVINCE_LABEL) === '1'; // default: off
 
         function applyDeckProvinceLabelSetting(enabled) {
             _showDeckProvinceLabel = enabled;
@@ -7323,7 +7871,7 @@
 
         function hideSettingsScreen() {
             document.getElementById('settings-screen').style.display = 'none';
-            document.body.style.overflow = '';
+            restoreBodyOverflow();
         }
 
         function showPengembangScreen() {
@@ -7333,7 +7881,7 @@
 
         function hidePengembangScreen() {
             document.getElementById('pengembang-screen').style.display = 'none';
-            document.body.style.overflow = '';
+            restoreBodyOverflow();
         }
 
         function applyVolumeBgMusic1(val) {
@@ -7648,7 +8196,7 @@
 
         function closeVisitProfile() {
             document.getElementById('visit-profile-screen').classList.remove('active');
-            document.body.style.overflow = '';
+            restoreBodyOverflow();
             detachVisitListeners();
             _visitUid = null;
         }
@@ -7951,7 +8499,7 @@
             { key:'commonplus',  label:'🟢 Common+' },
             { key:'common',      label:'⚪ Common' },
         ];
-        const DL_THRESHOLDS = [0, 0, 3, 6, 9, 12, 15, 18, 21, 24, 27]; // index=level, value=min drawCount (naik setiap 3 draw)
+        const DL_THRESHOLDS = [0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9]; // index=level, value=min drawCount (naik setiap 1 draw)
         const DL_STARS = { 1:'⭐', 2:'⭐', 3:'⭐', 4:'⭐', 5:'⭐', 6:'⭐', 7:'⭐', 8:'⭐', 9:'⭐', 10:'⭐' };
 
         function showDrawLevelInfo(playerId) {
@@ -8147,6 +8695,7 @@
         let _partyFriend2Uid  = null;  // Slot 3
         let _partyFriend2Name = null;
         let _partyId          = null;
+        let _partyFirebaseId  = null;  // ID Firebase party asli (party_xxx) — terpisah dari sharedPartyId (qp_xxx) saat queuing
         let _partyInviteData  = null;
         let _partyStatusRef   = null;  // Listener accept/decline slot 2
         let _partyStatus2Ref  = null;  // Listener accept/decline slot 3
@@ -8154,11 +8703,20 @@
         let _partySignalRef   = null;  // Listener partyStart dari host (sisi penerima)
         let _isPartyGuest         = false; // true saat melihat party lobby sebagai tamu (bukan host)
         let _partyHostUid         = null;  // UID host party (dipakai tamu)
+        let _partyHostName        = null;  // Nama host party (dipakai tamu untuk re-render lobi)
+        let _myPartySlot          = 2;     // Nomor slot tamu ini di lobi party (2 atau 3)
         let _guestPartyStatusRef  = null;  // Listener partyStatus host (update slot 3 real-time)
         let _partyRosterRef     = null;  // Host: listener roster untuk deteksi tamu keluar sukarela
         let _partyKickRef       = null;  // Guest: listener notifikasi dikick/dibubarkan
         let _partyGuestRosterRef= null;  // Guest: listener roster untuk update slot 3 saat tamu lain keluar
         let _guestSlot3Uid      = null;  // Guest: UID pemain di slot 3
+        let _pendingPartySignals = null; // FIX race condition: { uids, partyId, partySize } — dikirim di ws.onopen bukan langsung
+        // FIX: sembunyikan popup undangan sampai user menekan PLAY, lalu flush setelah transisi selesai
+        let _hasEnteredMain          = false; // true setelah goToMatchmaking() selesai transisi
+        let _pendingInviteBeforePlay       = null;  // simpan undangan party yang masuk sebelum PLAY ditekan
+        let _pendingCustomInviteBeforePlay = null;  // simpan undangan custom room yang masuk sebelum PLAY ditekan
+        let _pendingPartyBubble            = false; // true jika party bubble perlu muncul setelah PLAY
+        let _pendingCustomBubble           = false; // true jika custom room bubble perlu muncul setelah PLAY
         let _openPickerSlot   = null;  // Slot mana yang sedang memilih teman (2 atau 3)
         let _partyPresenceRef = null;  // Real-time listener presence untuk party picker
         let _partyPresenceCb  = null;
@@ -8173,6 +8731,8 @@
             ov.style.webkitBackdropFilter = 'none';
             ov.style.pointerEvents = 'none';
             document.querySelector('#party-lobby-overlay .party-lobby-card').style.display = 'none';
+            // Jangan tampilkan bubble jika user belum menekan PLAY
+            if (!_hasEnteredMain) { _pendingPartyBubble = true; return; }
             document.getElementById('party-lobby-bubble').style.display = 'flex';
         }
         function restorePartyLobby() {
@@ -8201,6 +8761,8 @@
             ov.style.webkitBackdropFilter = 'none';
             ov.style.pointerEvents = 'none';
             document.querySelector('#custom-room-overlay .custom-room-card').style.display = 'none';
+            // Jangan tampilkan bubble jika user belum menekan PLAY
+            if (!_hasEnteredMain) { _pendingCustomBubble = true; return; }
             document.getElementById('custom-lobby-bubble').style.display = 'flex';
         }
         function restoreCustomRoom() {
@@ -8231,16 +8793,45 @@
                 restoreCustomRoom();
                 return;
             }
-            _resetPartyLobbyOverlay();
-            // Reset state
-            _partyFriendUid = null; _partyFriendName = null;
+
+            // [FIX] Hard reset semua state & DOM party sebelum render sebagai host baru.
+            // Ini menangani kasus: setelah game selesai/menyerah, goToHome() mereset variabel JS
+            // (_isPartyGuest=false dll) tapi TIDAK mereset DOM — sehingga tombol Mulai masih
+            // tersembunyi (di-hide oleh _showGuestPartyLobby) dan slot 1 masih tampilkan
+            // nama/avatar lama. Solusinya: showPartyLobby() selalu restore DOM secara penuh,
+            // terlepas dari nilai _isPartyGuest saat ini.
+
+            // Matikan semua listener guest yang mungkin masih aktif
+            if (_partySignalRef)      { _partySignalRef.off();      _partySignalRef = null; }
+            if (_guestPartyStatusRef) { _guestPartyStatusRef.off(); _guestPartyStatusRef = null; }
+            if (_partyKickRef)        { _partyKickRef.off();        _partyKickRef = null; }
+            if (_partyGuestRosterRef) { _partyGuestRosterRef.off(); _partyGuestRosterRef = null; }
+            if (currentUser) {
+                db.ref(`users/${currentUser.uid}/partyCancelSearch`).off();
+            }
+
+            // Reset semua state JS party
+            _isPartyGuest    = false;
+            _partyHostUid    = null;
+            _partyHostName   = null;
+            _myPartySlot     = 2;
+            _guestSlot3Uid   = null;
+            _partyFriendUid  = null; _partyFriendName  = null;
             _partyFriend2Uid = null; _partyFriend2Name = null;
-            _partyId = null; _openPickerSlot = null;
+            _partyId         = null; _partyFirebaseId  = null;
+            _partyQueueSize  = null; _openPickerSlot   = null;
+
+            // Reset DOM secara penuh — ini yang hilang sebelumnya:
+            // tombol Mulai, slot 1, slot 2, slot 3 dikembalikan ke kondisi awal host
+            _resetPartyLobbyOverlay();
             _stopPartyPresenceListener();
             document.getElementById('party-friend-picker').style.display = 'none';
             _resetSlot2();
             _resetSlot3();
-            // Isi slot 1 dengan nama player sendiri
+            // Restore tombol Mulai (bisa tersembunyi dari sesi tamu sebelumnya)
+            const lobbyCard = document.querySelector('.party-lobby-card');
+            if (lobbyCard) lobbyCard.querySelector('.party-btn-start').style.display = '';
+            // Isi slot 1 dengan nama & avatar player sendiri
             const name = currentNickname || lsGet(LS.NICKNAME) || 'Kamu';
             document.getElementById('pslot-1-name').textContent = name;
             document.getElementById('pslot-1-icon').innerHTML = _getAvatarWithFrameHtml(54);
@@ -8249,12 +8840,14 @@
             _setPresenceStatus('inLobby');
         }
 
-        function closePartyLobby(keepPartyId = false) {
+        function closePartyLobby(keepPartyId = false, enteringQueue = false) {
             // Jika dalam mode tamu, gunakan alur batal khusus tamu
             if (_isPartyGuest) {
                 if (_partySignalRef) { _partySignalRef.off(); _partySignalRef = null; }
-                // Hapus diri dari roster & bersihkan partyStatus agar host tidak baca data accept lama
-                if (_partyId && currentUser) {
+                // FIX: Jangan hapus partyStatus saat masuk antrian (enteringQueue=true)
+                // karena data ini dibutuhkan untuk re-render lobi jika tamu cancel dari queue.
+                // Hanya hapus saat tamu benar-benar keluar dari party (bukan sedang queuing).
+                if (!enteringQueue && _partyId && currentUser) {
                     db.ref(`partyRoster/${_partyId}/${currentUser.uid}`).remove().catch(() => {});
                     if (_partyHostUid) {
                         db.ref(`users/${_partyHostUid}/partyStatus/${_partyId}/${currentUser.uid}`).remove().catch(() => {});
@@ -8290,11 +8883,17 @@
                 // Hapus seluruh partyStatus agar tidak terbaca di sesi berikutnya
                 db.ref(`users/${currentUser.uid}/partyStatus`).remove().catch(() => {});
             }
-            _partyFriendUid = null; _partyFriendName = null;
-            _partyFriend2Uid = null; _partyFriend2Name = null;
             _openPickerSlot = null;
-            // keepPartyId=true digunakan oleh startMatchmakingFromParty agar partyId tidak direset
-            if (!keepPartyId) _partyId = null;
+            // keepPartyId=true digunakan oleh startMatchmakingFromParty:
+            // - partyId tidak direset (agar JOIN_MATCHMAKING pakai ID yang benar)
+            // - _partyFriendUid/_partyFriend2Uid tidak direset (agar saat kembali ke lobi setelah
+            //   cancel, host tekan Mulai lagi masih bisa kirim partySignal ke tamu yang benar)
+            if (!keepPartyId) {
+                _partyFriendUid = null; _partyFriendName = null;
+                _partyFriend2Uid = null; _partyFriend2Name = null;
+                _partyId = null;
+                _partyFirebaseId = null;
+            }
         }
 
         function _stopPartyPresenceListener() {
@@ -8402,6 +9001,7 @@
             if (!_partyId) {
                 // Buat partyId baru pertama kali teman dipilih
                 _partyId = `party_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+                _partyFirebaseId = _partyId; // Simpan ID Firebase asli
                 if (currentUser) {
                     // Bersihkan partyStatus lama agar listener tamu tidak baca data basi
                     db.ref(`users/${currentUser.uid}/partyStatus`).remove().catch(() => {});
@@ -8554,7 +9154,7 @@
         function _resetSlot2() { _resetPartySlot(2); }
         function _resetSlot3() { _resetPartySlot(3); }
 
-        async function startMatchmakingFromParty() {
+        function startMatchmakingFromParty() {
             // Hitung jumlah teman yang sudah menerima (slot joined)
             const slot2Joined = document.getElementById('pslot-2')?.classList.contains('joined');
             const slot3Joined = document.getElementById('pslot-3')?.classList.contains('joined');
@@ -8562,16 +9162,73 @@
             const partySize = 1 + friendCount;
             _partyQueueSize = partySize > 1 ? partySize : null;
 
+            // ── FIX: Generate sharedQueueId BARU setiap kali Mulai ditekan ──────
+            // Setiap siklus matchmaking harus memakai ID unik agar server tidak
+            // bingung antara partyGroup lama (yang mungkin masih dalam grace period
+            // cancel) dengan siklus baru. _partyFirebaseId tetap disimpan sebagai
+            // anchor agar tamu bisa mengidentifikasi sinyal dari host yang benar.
+            //
+            // Alur:
+            //   _partyFirebaseId = "party_abc" (ID Firebase asli, tidak berubah)
+            //   Siklus 1: _partyId = "qp_111_aaa"  → dikirim ke server + tamu
+            //   Siklus 2: _partyId = "qp_222_bbb"  → dikirim ke server + tamu
+            //   Siklus 3: dst.
+            //
+            // Tamu: _startPartySignalListener menerima partyId dari sig.partyId
+            // (qp_xxx baru), bukan dari _partyFirebaseId — sehingga selalu sinkron.
+            const sharedQueueId = friendCount > 0
+                ? `qp_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`
+                : null;
+
+            if (sharedQueueId) {
+                _partyId = sharedQueueId; // gunakan ID baru untuk JOIN_MATCHMAKING
+            }
+
             // Beritahu teman yang sudah join untuk segera masuk antrian via Firebase partySignal
             const acceptedUids = [
                 slot2Joined ? _partyFriendUid : null,
                 slot3Joined ? _partyFriend2Uid : null
             ].filter(Boolean);
-            for (const friendUid of acceptedUids) {
-                if (!friendUid) continue;
-                const sigRef = db.ref(`users/${friendUid}/partySignal`);
-                await sigRef.set({ partyId: _partyId, partySize }).catch(() => {});
-                sigRef.onDisconnect().remove();
+
+            // FIX race condition: simpan sinyal dulu, baru kirim di ws.onopen setelah host connect.
+            // Kirim sharedQueueId baru (bukan _partyFirebaseId) agar tamu JOIN_MATCHMAKING
+            // dengan partyId yang sama persis dengan host.
+            _pendingPartySignals = acceptedUids.length > 0
+                ? { uids: acceptedUids, partyId: sharedQueueId, partySize }
+                : null;
+
+            // Pasang listener partyCancelSearch untuk HOST — agar host ikut berhenti
+            // jika salah satu tamu membatalkan pencarian lawan
+            if (currentUser && friendCount > 0) {
+                const hostCancelRef = db.ref(`users/${currentUser.uid}/partyCancelSearch`);
+                hostCancelRef.off();
+                hostCancelRef.on('value', snap => {
+                    if (!snap.exists()) return;
+                    const val = snap.val();
+                    hostCancelRef.remove().catch(() => {});
+                    hostCancelRef.off();
+                    const floatBar = document.getElementById('matchmaking-float-bar');
+                    if (!floatBar || floatBar.style.display === 'none') return;
+                    // Hentikan pencarian
+                    hideMatchmakingFloatBar();
+                    stopMatchmakingCountdown();
+                    if (ws) {
+                        try { ws.send(JSON.stringify({ type: 'LEAVE_QUEUE' })); } catch(e) {}
+                        ws.onclose = null; ws.onerror = null;
+                        ws.close();
+                        ws = null;
+                    }
+                    soundEffects.bgMusic2.pause();
+                    soundEffects.bgMusic2.currentTime = 0;
+                    soundEffects.bgMusic.play().catch(() => {});
+                    _partyQueueSize = null;
+                    if (_partyFirebaseId) _partyId = _partyFirebaseId;
+                    _setPresenceStatus('inLobby');
+                    // Kembalikan host ke lobi party
+                    document.getElementById('party-lobby-overlay').style.display = 'flex';
+                    const cancellerName = val?.cancelledBy || 'Salah satu pemain';
+                    showToast(`ℹ️ ${cancellerName} membatalkan pencarian lawan.`, 'info');
+                });
             }
 
             // keepPartyId hanya jika ada teman yang sudah join
@@ -8606,6 +9263,14 @@
                 _partyInviteData = inv;
                 // Hapus partyKick lama agar tidak trigger "party dibubarkan" setelah terima undangan baru
                 db.ref(`users/${currentUser.uid}/partyKick`).remove().catch(() => {});
+
+                // Jika user belum menekan PLAY (masih di pre-loading screen), tahan undangan dulu.
+                // Undangan akan ditampilkan otomatis setelah goToMatchmaking() selesai transisi.
+                if (!_hasEnteredMain) {
+                    _pendingInviteBeforePlay = inv;
+                    return;
+                }
+
                 document.getElementById('party-invite-msg').textContent =
                     `${inv.fromName || 'Seorang teman'} mengajakmu main bareng!`;
                 document.getElementById('party-invite-popup').style.display = 'flex';
@@ -8657,6 +9322,7 @@
             }).catch(() => {});
             // Simpan partyId, host info, lalu tampilkan party lobby dalam mode tamu
             _partyId = inv.partyId;
+            _partyFirebaseId = inv.partyId; // Simpan ID Firebase asli untuk broadcast cancel
             _partyHostUid = inv.fromUid;
             _isPartyGuest = true;
             _setPresenceStatus('inLobby');
@@ -8679,13 +9345,33 @@
             _partySignalRef.on('value', snap => {
                 if (!snap.exists()) return;
                 const sig = snap.val();
-                if (!sig || sig.partyId !== partyId) return;
+                // ── FIX: Validasi sinyal berdasarkan struktur data, bukan exact match partyId ──
+                // Sebelumnya: sig.partyId !== partyId → GAGAL karena host kini generate
+                // sharedQueueId (qp_xxx) baru tiap siklus, sedangkan listener dipanggil
+                // dengan _partyFirebaseId (party_xxx) yang tidak pernah cocok.
+                //
+                // Sekarang: terima sinyal APAPUN yang punya partyId & partySize valid,
+                // selama listener ini masih aktif (artinya tamu memang menunggu sinyal).
+                // Guard pengaman: sinyal harus punya partyId bertipe string dan partySize > 0.
+                if (!sig || typeof sig.partyId !== 'string' || !(sig.partySize > 0)) return;
+
                 // Host sudah mulai — hapus sinyal lalu masuk antrian
                 db.ref(`users/${currentUser.uid}/partySignal`).remove().catch(() => {});
                 if (_partySignalRef) { _partySignalRef.off(); _partySignalRef = null; }
-                // Tutup guest party lobby lalu masuk antrian
-                if (_isPartyGuest) _closeGuestPartyLobby();
-                _partyId = sig.partyId;
+                // FIX: Jangan panggil _closeGuestPartyLobby() di sini karena akan mereset
+                // _isPartyGuest, _partyHostUid, _partyHostName, _myPartySlot — semua state
+                // yang dibutuhkan untuk re-render lobi saat tamu cancel dari queue.
+                // Cukup sembunyikan overlay saja.
+                if (_isPartyGuest) {
+                    document.getElementById('party-lobby-overlay').style.display = 'none';
+                    // Matikan listeners yang tidak diperlukan selama queue
+                    if (_guestPartyStatusRef) { _guestPartyStatusRef.off(); _guestPartyStatusRef = null; }
+                    if (_partyKickRef) { _partyKickRef.off(); _partyKickRef = null; }
+                    if (_partyGuestRosterRef) { _partyGuestRosterRef.off(); _partyGuestRosterRef = null; }
+                }
+                // Gunakan sharedQueueId (qp_xxx) dari sinyal sebagai _partyId untuk JOIN_MATCHMAKING
+                // _partyFirebaseId tetap tidak berubah (party_xxx) — dipakai untuk signal listener berikutnya
+                _partyId = sig.partyId;          // qp_xxx baru dari host
                 _partyQueueSize = sig.partySize || 2;
                 startMatchmaking();
             });
@@ -8693,6 +9379,8 @@
 
         function _showGuestPartyLobby(hostUid, hostName, mySlotNum) {
             mySlotNum = mySlotNum || 2;
+            _myPartySlot  = mySlotNum;   // Simpan agar bisa re-render saat kembali dari queue
+            _partyHostName = hostName;   // Simpan nama host untuk re-render
             const otherSlotNum = mySlotNum === 2 ? 3 : 2;
             // Slot 1: Tampilkan host dengan avatar + rank frame
             document.getElementById('pslot-1-name').textContent = escHtml(hostName);
@@ -8779,8 +9467,61 @@
                     _closeGuestPartyLobby();
                     _partyId = null; _partyQueueSize = null;
                     _setPresenceStatus('online');
-                    if (val && val.disbanded) showToast('ℹ️ Party telah dibubarkan oleh host.', 'info');
-                    else showToast('ℹ️ Kamu telah dikeluarkan dari party.', 'info');
+                    if (val && val.disbanded) {
+                        const floatBar = document.getElementById('matchmaking-float-bar');
+                        const isInQueue = floatBar && floatBar.style.display !== 'none';
+                        const cancellerName = val.cancelledBy || 'Salah satu pemain';
+                        showToast(isInQueue
+                            ? `ℹ️ ${cancellerName} membatalkan proses mencari lawan.`
+                            : `ℹ️ Party telah dibubarkan oleh ${cancellerName}.`, 'info');
+                    } else showToast('ℹ️ Kamu telah dikeluarkan dari party.', 'info');
+                });
+            }
+            // Listener partyCancelSearch: salah satu anggota membatalkan pencarian lawan
+            // → semua anggota kembali ke lobi party TANPA membubarkan party
+            if (currentUser) {
+                const cancelSearchRef = db.ref(`users/${currentUser.uid}/partyCancelSearch`);
+                cancelSearchRef.off();
+                cancelSearchRef.on('value', snap => {
+                    if (!snap.exists()) return;
+                    const val = snap.val();
+                    cancelSearchRef.remove().catch(() => {});
+                    // FIX: Hapus guard floatBar — sinyal harus tetap diproses meski ada race condition timing
+                    const floatBar = document.getElementById('matchmaking-float-bar');
+                    const isSearching = floatBar && floatBar.style.display !== 'none';
+                    if (isSearching) {
+                        hideMatchmakingFloatBar();
+                        stopMatchmakingCountdown();
+                        if (ws) {
+                            try { ws.send(JSON.stringify({ type: 'LEAVE_QUEUE' })); } catch(e) {}
+                            ws.onclose = null; ws.onerror = null;
+                            ws.close();
+                            ws = null;
+                        }
+                        soundEffects.bgMusic2.pause();
+                        soundEffects.bgMusic2.currentTime = 0;
+                        soundEffects.bgMusic.play().catch(() => {});
+                    } else if (!_isPartyGuest) {
+                        return; // Host tidak sedang mencari, abaikan
+                    }
+                    _partyQueueSize = null;
+                    // Kembalikan _partyId ke Firebase ID asli agar lobi party berfungsi
+                    if (_partyFirebaseId) _partyId = _partyFirebaseId;
+                    _setPresenceStatus('inLobby');
+                    // Kembalikan ke lobi party (party tidak dibubarkan)
+                    // Jika tamu: render ulang tampilan lobi guest dengan data yang tersimpan
+                    if (_isPartyGuest && _partyHostUid && _partyHostName) {
+                        _showGuestPartyLobby(_partyHostUid, _partyHostName, _myPartySlot);
+                    } else {
+                        document.getElementById('party-lobby-overlay').style.display = 'flex';
+                    }
+                    const cancellerName = val?.cancelledBy || 'Salah satu pemain';
+                    showToast(`ℹ️ ${cancellerName} membatalkan pencarian lawan.`, 'info');
+                    // PATCH A: Pasang ulang listener partySignal agar tamu bisa merespons
+                    // jika host menekan Mulai lagi di siklus berikutnya
+                    if (_isPartyGuest && _partyFirebaseId) {
+                        _startPartySignalListener(_partyFirebaseId);
+                    }
                 });
             }
             // Listener partyRoster: deteksi host disconnect/refresh (partyRoster terhapus total)
@@ -8815,6 +9556,8 @@
         function _closeGuestPartyLobby() {
             _isPartyGuest = false;
             _partyHostUid = null;
+            _partyHostName = null;
+            _myPartySlot = 2;
             if (_guestPartyStatusRef) { _guestPartyStatusRef.off(); _guestPartyStatusRef = null; }
             if (_partyKickRef) { _partyKickRef.off(); _partyKickRef = null; }
             if (_partyGuestRosterRef) { _partyGuestRosterRef.off(); _partyGuestRosterRef = null; }
@@ -8830,6 +9573,25 @@
             const myName = currentNickname || lsGet(LS.NICKNAME) || 'Kamu';
             document.getElementById('pslot-1-name').textContent = myName;
             document.getElementById('pslot-1-icon').innerHTML = _getAvatarWithFrameHtml(54);
+            // Jika sedang dalam antrian (floating bar aktif), hentikan proses dan tampilkan halaman utama kembali
+            const floatBar = document.getElementById('matchmaking-float-bar');
+            if (floatBar && floatBar.style.display !== 'none') {
+                hideMatchmakingFloatBar();
+                stopMatchmakingCountdown();
+                if (ws) {
+                    try { ws.send(JSON.stringify({ type: 'LEAVE_QUEUE' })); } catch(e) {}
+                    ws.onclose = null; ws.onerror = null;
+                    ws.close();
+                    ws = null;
+                }
+                DOM.matchmakingScreen.classList.add('active');
+                DOM.matchmakingScreen.querySelector('#matchmaking-idle').style.display = 'flex';
+                DOM.matchmakingScreen.querySelector('#matchmaking-waiting').style.display = 'none';
+                DOM.matchmakingScreen.style.justifyContent = 'flex-end';
+                soundEffects.bgMusic2.pause();
+                soundEffects.bgMusic2.currentTime = 0;
+                soundEffects.bgMusic.play().catch(() => {});
+            }
         }
 
         async function declinePartyInvite() {
@@ -8856,14 +9618,51 @@
         // =============================================
         let _customRoomId         = null;   // room ID dari server
         let _customRoomRole       = null;   // 'pemain' | 'penonton'
-        let _customRoomSlots      = [];     // filled slots [{name, uid}]
+        let _customRoomSlots      = {};     // filled slots {slotPos: {name, uid, isBot?, level?}} — key = nomor slot asli (1-4)
         let _customInviteData     = null;   // pending invite data
         let _customInviteRef      = null;   // Firebase listener ref
+        let _customDeclineRef     = null;   // Firebase listener: host mendeteksi penolakan undangan
         let _customPickerSlot     = null;   // which slot index is being filled
+        let _pendingBotAdd        = false;  // flag: sedang menunggu konfirmasi server untuk ADD_BOT_SLOT
         let _pendingCustomJoin    = false;  // menunggu konfirmasi server setelah JOIN_CUSTOM_ROOM
         let _isCustomRoomCreator  = false;  // true = user yang membuat room (bisa tambah/hapus bot)
         let _isCustomRoom         = false;  // in-game flag
         let _isSpectator          = false;  // in-game spectator flag
+
+        // Listener untuk HOST: mendeteksi saat undangan yang dikirim ditolak oleh penerima
+        function _startCustomDeclineListener() {
+            if (!currentUser || !_isCustomRoomCreator) return;
+            if (_customDeclineRef) { _customDeclineRef.off(); _customDeclineRef = null; }
+            _customDeclineRef = db.ref(`users/${currentUser.uid}/customRoomDecline`);
+            _customDeclineRef.on('child_added', snap => {
+                if (!snap.exists()) return;
+                const data = snap.val();
+                // Hapus node agar tidak terpicu ulang
+                snap.ref.remove().catch(() => {});
+                // Abaikan jika sudah lebih dari 30 detik (stale)
+                if (!data.ts || Date.now() - data.ts > 30000) return;
+                // Tidak perlu cek _customRoomId karena listener sudah dimatikan saat room tutup
+                const declinedName = data.declinedBy || 'Pemain';
+                const declinedUid  = data.declinedByUid;
+                showToast(`❌ ${declinedName} menolak undanganmu.`, 'warning');
+                // Hapus slot pending yang cocok berdasarkan UID
+                Object.keys(_customRoomSlots).forEach(slot => {
+                    const s = _customRoomSlots[slot];
+                    if (s && s.pending && s.uid === declinedUid) {
+                        delete _customRoomSlots[slot];
+                    }
+                });
+                _renderCustomRoomLobby();
+            });
+        }
+
+        function _stopCustomDeclineListener() {
+            if (_customDeclineRef) { _customDeclineRef.off(); _customDeclineRef = null; }
+            // Bersihkan semua node decline yang tertinggal
+            if (currentUser) {
+                db.ref(`users/${currentUser.uid}/customRoomDecline`).remove().catch(() => {});
+            }
+        }
 
         function showKostumPicker() {
             if (!currentUser) { showToast('❌ Login dulu untuk fitur ini.', 'error'); return; }
@@ -8882,7 +9681,7 @@
         async function selectKostumRole(role) {
             closeKostumPicker();
             _customRoomRole = role;
-            _customRoomSlots = [];
+            _customRoomSlots = {};
             _customRoomId = null;
             _customPickerSlot = null;
             _isCustomRoomCreator = true; // user ini yang membuat room
@@ -8939,20 +9738,22 @@
                         // WS putus saat pending custom room (belum mulai game) —
                         // server sudah cleanup room via onclose, bersihkan state client
                         // agar tidak orphaned dan memblokir showPartyLobby()
-                        _customRoomSlots.forEach(s => {
+                        Object.values(_customRoomSlots).forEach(s => {
                             if (s?.pending && s.uid) db.ref(`users/${s.uid}/customRoomInvite`).remove().catch(() => {});
                         });
                         if (_customInviteRef) { _customInviteRef.off(); _customInviteRef = null; }
                         _customInviteData = null;
                         _customRoomId = null;
                         _customRoomRole = null;
-                        _customRoomSlots = [];
+                        _customRoomSlots = {};
                         _customPickerSlot = null;
                         _pendingCustomJoin = false;
                         _isCustomRoomCreator = false;
+                        _pendingBotAdd = false;
                         _resetCustomRoomOverlay();
                         document.getElementById('custom-room-overlay').style.display = 'none';
                         _stopCustomPresenceListener();
+            _stopCustomDeclineListener();
                         document.getElementById('custom-friend-picker').style.display = 'none';
                         _setPresenceStatus('online');
                         _startCustomRoomInviteListener();
@@ -8967,37 +9768,50 @@
             const myName = currentNickname || lsGet(LS.NICKNAME) || 'Kamu';
             const isSpect = _customRoomRole === 'penonton';
             const canManageBots = _isCustomRoomCreator;
+            const myUid = currentUser ? currentUser.uid : null;
 
             document.getElementById('custom-room-title').textContent = isSpect ? '📺 Custom Room – Penonton' : '🎮 Custom Room – Pemain';
             document.getElementById('custom-room-subtitle').textContent = isSpect
                 ? 'Kamu hanya menonton. Undang 4 pemain.'
-                : 'Slot 1 = kamu. Undang teman atau isi slot dengan bot.';
+                : _isCustomRoomCreator
+                    ? 'Slot 1 = kamu. Undang teman atau isi slot dengan bot.'
+                    : 'Kamu sudah bergabung. Menunggu host memulai...';
             document.getElementById('custom-room-id-badge').textContent = `Kode: ${_customRoomId || '...'}`;
 
             const slotsDiv = document.getElementById('custom-slots');
             slotsDiv.innerHTML = '';
 
-            // _customRoomSlots diindeks per posisi:
-            // pemain : index 0 = slot 2, index 1 = slot 3, index 2 = slot 4
-            // penonton: index 0 = slot 1, index 1 = slot 2, index 2 = slot 3, index 3 = slot 4
-            const totalOccupied = (isSpect ? 0 : 1) + _customRoomSlots.filter(Boolean).length;
+            // Untuk HOST: slot 1 dirender manual sebagai "Kamu", sisanya dari _customRoomSlots
+            // Untuk NON-HOST: semua slot dari _customRoomSlots (termasuk diri sendiri yang ada di salah satu slot)
+            const occupiedCount = Object.values(_customRoomSlots).filter(Boolean).length;
+            const totalOccupied = _isCustomRoomCreator ? (isSpect ? 0 : 1) + occupiedCount : occupiedCount;
 
             for (let slotPos = 1; slotPos <= 4; slotPos++) {
-                const slotIdx = isSpect ? (slotPos - 1) : (slotPos - 2);
-                const entry = slotIdx >= 0 ? _customRoomSlots[slotIdx] : null;
+                // HOST: slot 1 selalu "Kamu" (tidak ada di _customRoomSlots)
+                // NON-HOST: ambil semua dari _customRoomSlots
+                const entry = (!isSpect && _isCustomRoomCreator && slotPos === 1)
+                    ? null
+                    : (_customRoomSlots[slotPos] || null);
 
                 const slot = document.createElement('div');
                 slot.className = 'custom-slot';
 
-                if (!isSpect && slotPos === 1) {
-                    // Slot diri sendiri (hanya pemain)
+                if (!isSpect && _isCustomRoomCreator && slotPos === 1) {
+                    // Slot diri sendiri — hanya untuk host/creator
+                    slot.classList.add('self');
+                    slot.innerHTML = `
+                        ${_getAvatarWithFrameHtml(36)}
+                        <div class="custom-slot-name">${myName}</div>
+                        <div class="custom-slot-tag">Kamu</div>`;
+                } else if (entry && entry.uid === myUid && !isSpect) {
+                    // Non-host melihat dirinya sendiri di salah satu slot — render sebagai "Kamu"
                     slot.classList.add('self');
                     slot.innerHTML = `
                         ${_getAvatarWithFrameHtml(36)}
                         <div class="custom-slot-name">${myName}</div>
                         <div class="custom-slot-tag">Kamu</div>`;
                 } else if (entry?.isBot) {
-                    // Slot bot
+                    // Slot bot — gunakan slotPos asli untuk hapus
                     const levelLabel = entry.level === 1 ? 'Mudah' : entry.level === 2 ? 'Normal' : 'Sulit';
                     slot.classList.add('bot-slot');
                     slot.innerHTML = `
@@ -9005,14 +9819,14 @@
                         <div class="custom-slot-name">Bot Lv${entry.level} <span style="font-size:0.75em;color:rgba(255,255,255,0.4);">(${levelLabel})</span></div>
                         ${canManageBots ? `<button class="custom-slot-clear" onclick="playSound('button');removeBotFromRoom(${slotPos})" title="Hapus bot">✖</button>` : ''}`;
                 } else if (entry) {
-                    // Slot teman (terisi atau pending)
+                    // Slot teman — gunakan slotPos asli untuk kick
                     slot.classList.add('filled');
                     const cIconId = `cslot-icon-${slotPos}`;
                     const cInit   = escHtml(entry.name.charAt(0).toUpperCase());
                     slot.innerHTML = `
                         <div id="${cIconId}" style="width:36px;height:36px;border-radius:6px;overflow:hidden;display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#f093fb,#f5576c);font-size:1em;font-weight:bold;color:white;flex-shrink:0;">${cInit}</div>
                         <div class="custom-slot-name">${escHtml(entry.name)}</div>
-                        ${canManageBots ? `<button class="custom-slot-clear" onclick="playSound('button');clearCustomSlot(${slotIdx})">✖</button>` : ''}`;
+                        ${canManageBots ? `<button class="custom-slot-clear" onclick="playSound('button');clearCustomSlot(${slotPos})">✖</button>` : ''}`;
                     // Fetch avatar + rank frame async (hanya slot yang sudah dikonfirmasi)
                     if (entry.uid && !entry.pending) {
                         (uid => Promise.all([
@@ -9044,10 +9858,21 @@
             }
 
             // Update tombol Mulai — hanya hitung slot confirmed (bukan pending invite)
-            const confirmedCount = (isSpect ? 0 : 1) + _customRoomSlots.filter(s => s && !s.pending).length;
+            // Host: slot 1 manual (dirinya) + semua slot confirmed dari _customRoomSlots
+            // Non-host: semua slot dari _customRoomSlots (termasuk dirinya sendiri)
+            const confirmedCount = _isCustomRoomCreator
+                ? (isSpect ? 0 : 1) + Object.values(_customRoomSlots).filter(s => s && !s.pending).length
+                : Object.values(_customRoomSlots).filter(s => s && !s.pending).length;
             const _btnStart = document.getElementById('btn-custom-start');
-            _btnStart.disabled = confirmedCount < 2;
-            _btnStart.textContent = '▶ Mulai';
+            if (!_isCustomRoomCreator) {
+                // Non-host: sembunyikan tombol Mulai
+                _btnStart.style.display = 'none';
+            } else {
+                // Host/creator: tampilkan dan atur status tombol Mulai
+                _btnStart.style.display = '';
+                _btnStart.disabled = confirmedCount < 2;
+                _btnStart.textContent = '▶ Mulai';
+            }
         }
 
         async function openCustomFriendPicker(slotPos) {
@@ -9058,7 +9883,7 @@
 
             // ── Bagian pilih Bot ──────────────────────────────
             const isSpect = _customRoomRole === 'penonton';
-            const totalOccupied = (isSpect ? 0 : 1) + _customRoomSlots.filter(Boolean).length;
+            const totalOccupied = (isSpect ? 0 : 1) + Object.values(_customRoomSlots).filter(Boolean).length;
             const canAddBot = totalOccupied < 4;
             let html = `<div class="custom-friend-picker-title" style="margin-top:4px;">🤖 Isi slot dengan Bot:</div>
                 <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">`;
@@ -9100,7 +9925,7 @@
 
                 // Fungsi render menggunakan data presence terbaru
                 function renderCustomWithPresence(presence) {
-                    const invitedUids = _customRoomSlots.filter(s => s && !s.isBot).map(s => s.uid);
+                    const invitedUids = Object.values(_customRoomSlots).filter(s => s && !s.isBot).map(s => s.uid);
                     invitedUids.push(currentUser.uid);
                     const sorted = [...profiles].sort((a, b) => {
                         const aOk = presence[a.uid]?.online && !presence[a.uid]?.status && !invitedUids.includes(a.uid) ? 0 : 1;
@@ -9164,7 +9989,14 @@
         }
 
         function addBotToRoomSlot(level) {
-            // Simpan slot sebelum null-kan, lalu kirim ADD_BOT_SLOT ke server
+            // Cegah pengiriman ganda sebelum server konfirmasi
+            if (_pendingBotAdd) { console.warn('addBotToRoomSlot: masih menunggu konfirmasi server, diabaikan'); return; }
+            _pendingBotAdd = true;
+            // Optimistic update — tandai slot langsung sebagai pending bot agar UI tidak bisa klik ulang
+            if (_customPickerSlot) {
+                _customRoomSlots[_customPickerSlot] = { name: '🤖 Bot (menunggu...)', uid: null, isBot: true, level, pending: true };
+                _renderCustomRoomLobby();
+            }
             _stopCustomPresenceListener();
             document.getElementById('custom-friend-picker').style.display = 'none';
             addBotToRoom(level); // addBotToRoom baca _customPickerSlot sebelum di-null
@@ -9187,17 +10019,16 @@
             }).catch(() => {});
             // Auto-hapus jika host disconnect (crash/tutup tab)
             customInviteRef.onDisconnect().remove();
-            // Optimistically mark slot as pending — gunakan slotIdx berbasis posisi
-            const isSpect = _customRoomRole === 'penonton';
-            const slotIdx = isSpect ? (slotPos - 1) : (slotPos - 2);
-            _customRoomSlots[slotIdx] = { name: `${name} (menunggu...)`, uid, pending: true };
+            // Optimistically mark slot as pending — gunakan slotPos langsung sebagai key
+            _customRoomSlots[slotPos] = { name: `${name} (menunggu...)`, uid, pending: true };
             _renderCustomRoomLobby();
         }
 
-        function clearCustomSlot(slotIndex) {
-            if (_customRoomSlots[slotIndex]) {
-                const uid = _customRoomSlots[slotIndex].uid;
-                if (_customRoomSlots[slotIndex].pending) {
+        // slotPos = nomor slot asli (1-4), sama dengan key di _customRoomSlots
+        function clearCustomSlot(slotPos) {
+            if (_customRoomSlots[slotPos]) {
+                const uid = _customRoomSlots[slotPos].uid;
+                if (_customRoomSlots[slotPos].pending) {
                     // Undangan masih pending → batalkan via Firebase
                     db.ref(`users/${uid}/customRoomInvite`).remove().catch(() => {});
                 } else if (uid && ws && ws.readyState === WebSocket.OPEN) {
@@ -9207,7 +10038,7 @@
                     document.getElementById('custom-friend-picker').style.display = 'none';
                     return;
                 }
-                _customRoomSlots[slotIndex] = null;
+                delete _customRoomSlots[slotPos];
             }
             _stopCustomPresenceListener();
             document.getElementById('custom-friend-picker').style.display = 'none';
@@ -9218,7 +10049,7 @@
             if (!ws || ws.readyState !== WebSocket.OPEN || !_customRoomId) return;
             // Batalkan semua undangan Firebase yang masih pending (belum dijawab)
             // agar teman yang belum jawab tidak bisa terima undangan yang sudah tidak berlaku
-            _customRoomSlots.forEach(s => {
+            Object.values(_customRoomSlots).forEach(s => {
                 if (s?.pending && s.uid) db.ref(`users/${s.uid}/customRoomInvite`).remove().catch(() => {});
             });
             // Ganti musik ke game music
@@ -9238,7 +10069,7 @@
                 ws.send(JSON.stringify({ type: 'LEAVE_CUSTOM_ROOM', userUid: currentUser ? currentUser.uid : '' }));
             }
             // Batalkan semua undangan yang masih pending
-            _customRoomSlots.forEach(s => {
+            Object.values(_customRoomSlots).forEach(s => {
                 if (s?.pending && s.uid) db.ref(`users/${s.uid}/customRoomInvite`).remove().catch(() => {});
             });
             // Bersihkan Firebase listener undangan masuk (jika sedang jadi penerima)
@@ -9246,60 +10077,63 @@
             _customInviteData = null;
             _customRoomId = null;
             _customRoomRole = null;
-            _customRoomSlots = [];
+            _customRoomSlots = {};
             _customPickerSlot = null;
             _pendingCustomJoin = false;
             _isCustomRoomCreator = false;
+                        _pendingBotAdd = false;
             _resetCustomRoomOverlay();
             document.getElementById('custom-room-overlay').style.display = 'none';
             _stopCustomPresenceListener();
+            _stopCustomDeclineListener();
             document.getElementById('custom-friend-picker').style.display = 'none';
             _startCustomRoomInviteListener(); // restart listener agar undangan berikutnya tetap muncul
         }
 
         // Handle CUSTOM_ROOM_UPDATE from server (player joined / bot slot changed)
+        // _customRoomSlots sekarang adalah object {slot: entry} dengan slot = nomor posisi asli dari server (1-4)
         function _handleCustomRoomUpdate(data) {
             // data.slots = [{slot, name, uid, isBot?, level?}]
             if (!data.slots) return;
+            // Server sudah konfirmasi update — reset flag pending bot
+            _pendingBotAdd = false;
             const isSpect = _customRoomRole === 'penonton';
             const myUid   = currentUser ? currentUser.uid : null;
-            const prevSlots = _customRoomSlots.slice();
 
-            if (isSpect) {
-                // Penonton: semua 4 slot berdasarkan posisi server
-                const newSlots = new Array(4).fill(null);
-                data.slots.forEach(s => {
-                    const idx = s.slot - 1;
-                    if (idx < 0 || idx >= 4) return;
-                    newSlots[idx] = s.isBot
-                        ? { name: s.name, uid: null, isBot: true, level: s.level }
-                        : { name: s.name, uid: s.uid };
-                });
-                for (let i = 0; i < 4; i++) {
-                    if (!newSlots[i] && _customRoomSlots[i]?.pending) newSlots[i] = _customRoomSlots[i];
-                }
-                _customRoomSlots = newSlots;
-            } else {
-                // Pemain: slot 1 UI selalu "Kamu" — exclude UID sendiri, urutkan sisanya
-                const others = data.slots
-                    .filter(s => s.isBot || s.uid !== myUid)
-                    .sort((a, b) => a.slot - b.slot);
-                const newSlots = new Array(3).fill(null);
-                others.forEach((s, i) => {
-                    if (i >= 3) return;
-                    newSlots[i] = s.isBot
-                        ? { name: s.name, uid: null, isBot: true, level: s.level }
-                        : { name: s.name, uid: s.uid };
-                });
-                // Pertahankan pending invite di slot yang belum dikonfirmasi server
-                for (let i = 0; i < 3; i++) {
-                    if (!newSlots[i] && _customRoomSlots[i]?.pending) newSlots[i] = _customRoomSlots[i];
-                }
-                _customRoomSlots = newSlots;
+            // Simpan pending invite lama agar tidak hilang saat update
+            const prevPendingBySlot = {};
+            if (Array.isArray(_customRoomSlots)) {
+                // Migrasi format lama (array) ke object — hanya saat pertama kali
+                _customRoomSlots = {};
             }
+            Object.entries(_customRoomSlots).forEach(([slot, s]) => {
+                if (s && s.pending) prevPendingBySlot[slot] = s;
+            });
+
+            const newSlots = {};
+            data.slots.forEach(s => {
+                if (s.slot < 1 || s.slot > 4) return;
+                // Skip slot host sendiri (slot 1 untuk pemain) — hanya jika kita adalah creator/host
+                // Non-host (pemain yang diundang) perlu melihat dirinya sendiri di slot
+                if (!isSpect && s.uid === myUid && _isCustomRoomCreator) return;
+                newSlots[s.slot] = s.isBot
+                    ? { name: s.name, uid: null, isBot: true, level: s.level }
+                    : { name: s.name, uid: s.uid };
+            });
+
+            // Pertahankan pending invite di slot yang belum dikonfirmasi server
+            Object.entries(prevPendingBySlot).forEach(([slot, s]) => {
+                if (!newSlots[slot]) newSlots[slot] = s;
+            });
+
             // Detect new human players joining (not self, not bot, not pending)
-            const prevUids = new Set(prevSlots.filter(s => s && !s.isBot && s.uid).map(s => s.uid));
-            const newHumans = _customRoomSlots.filter(s => s && !s.isBot && s.uid && !s.pending && !prevUids.has(s.uid) && s.uid !== myUid);
+            const prevUids = new Set(
+                Object.values(_customRoomSlots)
+                    .filter(s => s && !s.isBot && s.uid)
+                    .map(s => s.uid)
+            );
+            _customRoomSlots = newSlots;
+            const newHumans = Object.values(newSlots).filter(s => s && !s.isBot && s.uid && !s.pending && !prevUids.has(s.uid) && s.uid !== myUid);
             if (newHumans.length > 0) {
                 playSound('invite');
                 newHumans.forEach(p => showToast(`✅ ${p.name} bergabung ke lobi!`, 'success'));
@@ -9309,6 +10143,8 @@
 
         function addBotToRoom(level) {
             if (!ws || ws.readyState !== WebSocket.OPEN || !_customRoomId) return;
+            // Guard: jangan kirim jika slot belum dipilih (bisa terjadi jika race condition atau double-click)
+            if (!_customPickerSlot) { console.warn('addBotToRoom: _customPickerSlot null, dibatalkan'); return; }
             ws.send(JSON.stringify({ type: 'ADD_BOT_SLOT', level, slotPosition: _customPickerSlot, userUid: currentUser ? currentUser.uid : '' }));
         }
 
@@ -9326,6 +10162,7 @@
                 if (!snap.exists()) {
                     document.getElementById('custom-room-invite-popup').style.display = 'none';
                     _customInviteData = null; // Hapus data lama agar klik "Terima" terlambat tidak diproses
+                    _pendingCustomInviteBeforePlay = null; // Bersihkan juga undangan yang masih tertahan
                     return;
                 }
                 const inv = snap.val();
@@ -9340,6 +10177,14 @@
                     return;
                 }
                 _customInviteData = inv;
+
+                // Jika user belum menekan PLAY (masih di pre-loading screen), tahan undangan dulu.
+                // Undangan akan ditampilkan otomatis setelah goToMatchmaking() selesai transisi.
+                if (!_hasEnteredMain) {
+                    _pendingCustomInviteBeforePlay = inv;
+                    return;
+                }
+
                 document.getElementById('custom-invite-msg').textContent =
                     `${inv.fromName || 'Seorang teman'} mengundangmu ke custom room!`;
                 document.getElementById('custom-room-invite-popup').style.display = 'flex';
@@ -9369,9 +10214,10 @@
                 // tiba sebelum KICKED_FROM_ROOM WebSocket message. Bersihkan state lama dan lanjut.
                 _customRoomId = null;
                 _customRoomRole = null;
-                _customRoomSlots = [];
+                _customRoomSlots = {};
                 _pendingCustomJoin = false;
                 _isCustomRoomCreator = false;
+                        _pendingBotAdd = false;
             }
 
             const inv = _customInviteData;
@@ -9398,9 +10244,10 @@
                 }
                 _customRoomId = inv.roomId;
                 _customRoomRole = 'pemain';
-                _customRoomSlots = [];
+                _customRoomSlots = {};
                 _pendingCustomJoin = true;
-                _isCustomRoomCreator = false; // bergabung sebagai tamu, bukan pencipta room
+                _isCustomRoomCreator = false;
+                        _pendingBotAdd = false; // bergabung sebagai tamu, bukan pencipta room
                 _setPresenceStatus('inLobby');
                 showToast('⏳ Bergabung ke custom room...', 'info');
                 const myName = currentNickname || lsGet(LS.NICKNAME) || 'Player';
@@ -9416,14 +10263,27 @@
                 _pendingCustomJoin = false;
                 _customRoomId = null;
                 _customRoomRole = null;
-                _customRoomSlots = [];
+                _customRoomSlots = {};
             }
         }
 
         async function declineCustomRoomInvite() {
             if (!_customInviteData || !currentUser) return;
+            const inv = _customInviteData;
             document.getElementById('custom-room-invite-popup').style.display = 'none';
             _customInviteData = null;
+            _pendingCustomInviteBeforePlay = null;
+
+            // Tulis status "declined" ke node khusus agar host bisa mendeteksi penolakan
+            // Host mendengarkan users/{hostUid}/customRoomDecline/{myUid}
+            if (inv.fromUid) {
+                await db.ref(`users/${inv.fromUid}/customRoomDecline/${currentUser.uid}`).set({
+                    declinedBy: currentNickname || lsGet(LS.NICKNAME) || 'Player',
+                    declinedByUid: currentUser.uid,
+                    ts: Date.now()
+                }).catch(() => {});
+            }
+            // Hapus undangan dari Firebase
             await db.ref(`users/${currentUser.uid}/customRoomInvite`).remove().catch(() => {});
         }
 
@@ -9733,6 +10593,16 @@
         <span class="lobby-bubble-dot"></span>
     </div>
 
+    <!-- FLOATING MATCHMAKING BAR -->
+    <div id="matchmaking-float-bar" style="display:none;">
+        <span class="mf-icon">🔍</span>
+        <div class="mf-info">
+            <span class="mf-label">Mencari Lawan...</span>
+            <span class="mf-timer" id="mf-timer">00:00</span>
+        </div>
+        <button class="mf-cancel-btn" onclick="playSound('x');cancelMatchmaking()">✕</button>
+    </div>
+
     <!-- TOAST CONTAINER -->
     <div id="toast-container"></div>
 
@@ -9756,3 +10626,43 @@
     </div>
 </body>
 </html>
+<script>
+// =============================================
+// FLOATING MATCHMAKING BAR - TIMER
+// =============================================
+let _mfTimerInterval = null;
+
+function showMatchmakingFloatBar() {
+    const bar = document.getElementById('matchmaking-float-bar');
+    if (!bar) return;
+    bar.style.display = 'flex';
+    // Disable tombol Ranked dan Kostum saat mencari lawan
+    const btnRanked = document.querySelector('.btn-start');
+    const btnKostum = document.querySelector('.btn-kostum-style');
+    if (btnRanked) { btnRanked.disabled = true; btnRanked.style.opacity = '0.4'; btnRanked.style.cursor = 'not-allowed'; btnRanked.title = 'Batalkan proses mencari lawan terlebih dahulu'; }
+    if (btnKostum) { btnKostum.disabled = true; btnKostum.style.opacity = '0.4'; btnKostum.style.cursor = 'not-allowed'; btnKostum.title = 'Batalkan proses mencari lawan terlebih dahulu'; }
+    let totalSecs = 0;
+    clearInterval(_mfTimerInterval);
+    _mfTimerInterval = setInterval(() => {
+        totalSecs++;
+        const m = String(Math.floor(totalSecs / 60)).padStart(2, '0');
+        const s = String(totalSecs % 60).padStart(2, '0');
+        const el = document.getElementById('mf-timer');
+        if (el) el.textContent = `${m}:${s}`;
+    }, 1000);
+}
+
+function hideMatchmakingFloatBar() {
+    const bar = document.getElementById('matchmaking-float-bar');
+    if (bar) bar.style.display = 'none';
+    clearInterval(_mfTimerInterval);
+    _mfTimerInterval = null;
+    const el = document.getElementById('mf-timer');
+    if (el) el.textContent = '00:00';
+    // Re-enable tombol Ranked dan Kostum
+    const btnRanked = document.querySelector('.btn-start');
+    const btnKostum = document.querySelector('.btn-kostum-style');
+    if (btnRanked) { btnRanked.disabled = false; btnRanked.style.opacity = ''; btnRanked.style.cursor = ''; btnRanked.title = ''; }
+    if (btnKostum) { btnKostum.disabled = false; btnKostum.style.opacity = ''; btnKostum.style.cursor = ''; btnKostum.title = ''; }
+}
+</script>
